@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TMC Service - App Rapporti A4</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root { --tmc-blue: #0054a6; --tmc-light-blue: #f0f7ff; --tmc-dark: #222; }
+        
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background: #525659; color: var(--tmc-dark); }
+        .page-a4 { 
+            background: white; width: 210mm; min-height: 297mm; margin: 10px auto; 
+            padding: 10mm; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            display: flex; flex-direction: column; position: relative;
+        }
+
+        @media screen and (max-width: 210mm) {
+            body { background: white; }
+            .page-a4 { width: 100%; margin: 0; padding: 10px; box-shadow: none; }
+        }
+
+        .banner-static { width: 100%; display: block; }
+        .main-title-container { 
+            display: flex; justify-content: space-between; align-items: center; 
+            color: var(--tmc-blue); font-weight: bold; border-top: 2px solid var(--tmc-blue); 
+            border-bottom: 2px solid var(--tmc-blue); padding: 8px; margin: 10px 0; 
+        }
+
+        .tipo-box { border: 2px solid var(--tmc-blue); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; }
+        .tipo-box.active { background: var(--tmc-blue); color: white; }
+
+        .card { border: 1px solid var(--tmc-blue); padding: 10px; margin-bottom: 10px; border-radius: 5px; position: relative; }
+        .grid-header { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; }
+        
+        .input-field label { font-size: 8px; font-weight: bold; color: var(--tmc-blue); display: block; text-transform: uppercase; margin-bottom: 2px; }
+        
+        input, textarea, select { border: none; border-bottom: 1px solid #cce0f5; padding: 4px 0; font-size: 12px; outline: none; width: 100%; background: transparent; }
+        .caps { text-transform: uppercase; }
+
+        .tecnico-combo { position: relative; width: 100%; height: 25px; }
+        .tecnico-input-main { position: absolute; top: 0; left: 0; width: calc(100% - 25px); border-bottom: 1px solid #cce0f5; z-index: 2; background: white; text-transform: uppercase; }
+        .tecnico-select-bg { width: 100%; position: relative; z-index: 1; }
+
+        table { width: 100%; border-collapse: collapse; border: 1px solid var(--tmc-blue); margin-top: 5px; }
+        th { background: var(--tmc-light-blue); font-size: 7px; border: 1px solid var(--tmc-blue); padding: 5px 2px; color: var(--tmc-blue); }
+        td { border: 1px solid var(--tmc-blue); padding: 3px 1px; text-align: center; }
+        .time-select { font-size: 11px; font-weight: bold; color: var(--tmc-blue); background: #fff; border: 1px solid #ddd; width: 52px; height: 26px; border-radius: 3px; }
+
+        .pch-row { display: flex; justify-content: center; gap: 5px; font-size: 9px; font-weight: bold; align-items: center; }
+        .pch-row input { width: auto; margin: 0; }
+
+        .bottom-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; margin-top: auto; padding-top: 10px; }
+        .dotted-line { border-bottom: 1px dotted var(--tmc-blue); height: 18px; margin-bottom: 5px; }
+        .sig-preview { border: 2px dashed var(--tmc-blue); width: 100%; height: 90px; background: #f9f9f9; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .sig-preview img { max-height: 90%; }
+
+        #signature-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index: 9999; flex-direction: column; }
+        #canvas-fullscreen { flex-grow: 1; border: 3px solid var(--tmc-blue); margin: 15px; background: #fafafa; touch-action: none; }
+
+        .footer-static { width: 66%; display: block; margin: 10px auto; }
+        .no-print { display: flex; flex-wrap: wrap; gap: 10px; padding: 15px; max-width: 210mm; margin: 0 auto; justify-content: center; }
+        .btn { flex: 1; min-width: 90px; padding: 12px 5px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; font-size: 11px; text-align: center; }
+        .btn-blue { background: var(--tmc-blue); }
+        .btn-green { background: #25D366; } /* WhatsApp Green */
+        .btn-orange { background: #ff9800; } /* Email Orange */
+        .btn-dark { background: #444; }
+        .btn-sync { position: absolute; right: 10px; top: 10px; font-size: 20px; background: none; border: none; cursor: pointer; z-index: 10; }
+
+        .html2pdf__container .no-print { display: none !important; }
+
+        @media print { 
+            body { background: white; }
+            .page-a4 { margin: 0; border: none; box-shadow: none; width: 210mm; height: 297mm; }
+            .no-print, .btn-sync { display: none !important; } 
+        }
+        
+        /* Loading Overlay per invio mail */
+        #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; color: white; flex-direction: column; justify-content: center; align-items: center; font-family: sans-serif; font-weight: bold; }
+        .spinner { border: 6px solid #f3f3f3; border-top: 6px solid var(--tmc-blue); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="page-a4" id="rapporto-foglio">
+        <img src="static/intestazione.jpg" class="banner-static">
+
+        <div class="main-title-container">
+            <span>RAPPORTO INTERVENTO N. <input type="text" id="n_rapporto_input" name="n_rapporto" class="save-data caps" placeholder="XXXX" style="width:140px; font-size:16px; font-weight:bold; color:var(--tmc-blue);"></span>
+            <div style="display:flex; gap:8px;">
+                <div id="box-G" class="tipo-box" onclick="setTipo('G')">GRATUITO</div>
+                <div id="box-P" class="tipo-box" onclick="setTipo('P')">PAGAMENTO</div>
+                <input type="hidden" name="tipo_int" id="tipo_int_hidden" class="save-data" value="P">
+            </div>
+        </div>
+
+        <div class="card">
+            <button type="button" class="btn-sync no-print" onclick="importaDaCalendario()" title="Sincronizza">🔄</button>
+            
+            <div class="grid-header">
+                <div>
+                    <div class="input-field" style="margin-bottom:10px;">
+                        <label>Tecnico/i Incaricato/i</label>
+                        <div id="lista-tecnici-inputs">
+                            <div class="tecnico-riga" style="display:flex; gap:5px; margin-top:5px;">
+                                <div class="tecnico-combo" style="flex:1;">
+                                    <input type="text" name="tecnico_1" class="save-data tecnico-input-main caps" placeholder="Scrivi o seleziona...">
+                                    <select class="tecnico-select-bg" onchange="this.previousElementSibling.value=this.value; saveDraft();">
+                                        <option value=""></option>
+                                        <option value="CARINI MARCO">CARINI MARCO</option>
+                                        <option value="LIVIU CIORICI">LIVIU CIORICI</option>
+                                        <option value="MARIN CIORESCU">MARIN CIORESCU</option>
+                                        <option value="ATTILIO MASERATI">ATTILIO MASERATI</option>
+                                        <option value="POLLEDRI RICCARDO">POLLEDRI RICCARDO</option>
+                                        <option value="GAZZOLA MASSIMO">GAZZOLA MASSIMO</option>
+                                        <option value="BRAGHIERI STEFANO">BRAGHIERI STEFANO</option>
+                                        <option value="COROLI LORENZO">COROLI LORENZO</option>
+                                        <option value="CREMONESI NICOLA">CREMONESI NICOLA</option>
+                                        <option value="MARLIERI GIUSEPPE">MARLIERI GIUSEPPE</option>
+                                        <option value="MARZAROLI EMILIO">MARZAROLI EMILIO</option>
+                                        <option value="PICCOLI GIULIANO">PICCOLI GIULIANO</option>
+                                        <option value="IVAN ISOPESCU">IVAN ISOPESCU</option>
+                                        <option value="MAZZOCCHI MIRCO">MAZZOCCHI MIRCO</option>
+                                        <option value="MOIA LUIGI">MOIA LUIGI</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="no-print" onclick="aggiungiRigaTecnico()" style="font-size:8px; margin-top:5px; border:1px solid #ccc; background:#fff; cursor:pointer;">+ AGGIUNGI TECNICO</button>
+                    </div>
+
+                    <div class="input-field">
+                        <label>Mezzo di Trasporto</label>
+                        <select name="mezzo_trasporto" class="save-data">
+                            <option value="MEZZO AZIENDALE">MEZZO AZIENDALE</option>
+                            <option value="MEZZO PROPRIO">MEZZO PROPRIO</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="border-left: 1px solid #eee; padding-left: 20px;">
+                    <div class="input-field" style="margin-bottom:12px;">
+                        <label>Cliente</label>
+                        <input type="text" id="cliente_input" name="cliente" class="save-data caps" style="font-size:14px; font-weight:bold;">
+                    </div>
+                    <div class="input-field" style="margin-bottom:12px;">
+                        <label>Sede Intervento</label>
+                        <input type="text" id="indirizzo_input" name="indirizzo" class="save-data caps">
+                    </div>
+                    
+                    <div style="display:flex; gap:10px;">
+                        <div class="input-field" style="flex:1;">
+                            <label>Macchina / Matr.</label>
+                            <input type="text" id="macchina_input" name="macchina" class="save-data caps">
+                        </div>
+                        <div class="input-field" style="flex:1;">
+                            <label>Email Cliente</label>
+                            <input type="email" id="email_input" name="email_cliente" class="save-data" placeholder="nome@email.it" style="text-transform:none;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr><th rowspan="2">DATA</th><th colspan="2">VIAGGIO (A)</th><th colspan="2">LAVORO (M)</th><th colspan="2">LAVORO (P)</th><th colspan="2">VIAGGIO (R)</th><th rowspan="2">P / C / H</th></tr>
+                <tr style="font-size:5px;"><th>DA</th><th>A</th><th>DA</th><th>A</th><th>DA</th><th>A</th><th>DA</th><th>A</th></tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+
+        <div class="card" style="margin-top:10px;">
+            <label style="color:var(--tmc-blue); font-weight:bold;">PROBLEMA SEGNALATO</label>
+            <textarea id="descrizione_input" name="descrizione" class="save-data caps" rows="3"></textarea>
+        </div>
+
+        <table>
+            <thead><tr><th>CODICE</th><th>RICAMBIO</th><th style="width:10%">Q.TÀ</th><th style="width:15%">UNIT. €</th><th style="width:15%">TOT. €</th></tr></thead>
+            <tbody id="ricambi-body"></tbody>
+            <tfoot><tr><td colspan="4" style="text-align:right; font-weight:bold; padding-right:5px;">TOTALE MATERIALI:</td><td id="gran-totale" style="font-weight:bold; color:var(--tmc-blue);">0.00 €</td></tr></tfoot>
+        </table>
+
+        <div class="bottom-grid">
+            <div class="notes-box card" style="margin:0;">
+                <label>NOTE / RIEPILOGO SPESE</label>
+                <div style="font-size:7px;">PRESTAZIONE:<div class="dotted-line"></div></div>
+                <div style="font-size:7px;">VIAGGIO:<div class="dotted-line"></div></div>
+                <div style="font-size:7px;">TRASFERTA / ALTRO:<div class="dotted-line"></div><div class="dotted-line"></div></div>
+            </div>
+            <div class="sig-box">
+                <label style="color:var(--tmc-blue); font-weight:bold; font-size:8px;">FIRMA CLIENTE (TOCCA PER FIRMARE)</label>
+                <div id="firma-preview" class="sig-preview" onclick="openSignature()">
+                    <span id="placeholder-firma" style="color:#aaa; font-size:10px; text-align:center;">Firma a schermo intero</span>
+                    <img id="sig-image" src="" style="display:none;">
+                </div>
+            </div>
+        </div>
+
+        <img src="static/piede.jpg" class="footer-static">
+    </div>
+
+    <div class="no-print">
+        <button class="btn btn-dark" onclick="addRow()">+ GIORNO</button>
+        <button class="btn btn-dark" onclick="addRicambio()">+ RICAMBIO</button>
+        <button class="btn btn-blue" onclick="window.print()">SALVA PDF</button>
+        <button class="btn btn-green" onclick="condividiWhatsApp()">WHATSAPP</button>
+        <button class="btn btn-orange" onclick="inviaEmailAutomaticamente()">INVIA EMAIL</button>
+        <button class="btn" style="background:red;" onclick="nuovoRapporto()">RESET</button>
+    </div>
+
+    <div id="signature-overlay">
+        <div style="padding:15px; background:var(--tmc-blue); color:white; display:flex; justify-content:space-between; align-items:center;">
+            <b>FIRMA CLIENTE</b>
+            <button onclick="closeSignature(true)" style="background:white; color:var(--tmc-blue); border:none; padding:8px 15px; border-radius:4px; font-weight:bold;">CONFERMA</button>
+        </div>
+        <canvas id="canvas-fullscreen"></canvas>
+        <div style="padding:15px; display:flex; gap:10px;">
+            <button onclick="clearSignature()" style="flex:1; padding:15px; background:#eee; border:none; border-radius:4px;">CANCELLA</button>
+            <button onclick="closeSignature(false)" style="flex:1; padding:15px; background:#ff4444; color:white; border:none; border-radius:4px;">ANNULLA</button>
+        </div>
+    </div>
+    
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div>Invio email in corso... Attendere</div>
+    </div>
+
+    <script>
+        // LA TUA URL GOOGLE APPS SCRIPT
+        const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxh6R-LKwzIsbzNgTyf41AZTs3fxd_CqTE2bLQLQFcx7mwpb-ueqOARluwFPQFW47jM/exec";
+
+        let rowCount = 0; let ricCount = 0;
+        const canvas = document.getElementById('canvas-fullscreen');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        function aggiungiRigaTecnico(valore = "") {
+            const container = document.getElementById('lista-tecnici-inputs');
+            const idx = container.querySelectorAll('.tecnico-riga').length + 1;
+            const div = document.createElement('div');
+            div.className = "tecnico-riga";
+            div.style.display = "flex";
+            div.style.gap = "5px";
+            div.style.marginTop = "5px";
+            div.innerHTML = `
+                <div class="tecnico-combo" style="flex:1;">
+                    <input type="text" name="tecnico_${idx}" class="save-data tecnico-input-main caps" value="${valore.toUpperCase()}">
+                    <select class="tecnico-select-bg" onchange="this.previousElementSibling.value=this.value; saveDraft();">
+                        <option value=""></option>
+                        <option value="CARINI MARCO">CARINI MARCO</option>
+                        <option value="LIVIU CIORICI">LIVIU CIORICI</option>
+                        <option value="MARIN CIORESCU">MARIN CIORESCU</option>
+                        <option value="ATTILIO MASERATI">ATTILIO MASERATI</option>
+                        <option value="POLLEDRI RICCARDO">POLLEDRI RICCARDO</option>
+                        <option value="GAZZOLA MASSIMO">GAZZOLA MASSIMO</option>
+                        <option value="BRAGHIERI STEFANO">BRAGHIERI STEFANO</option>
+                        <option value="COROLI LORENZO">COROLI LORENZO</option>
+                        <option value="CREMONESI NICOLA">CREMONESI NICOLA</option>
+                        <option value="MARLIERI GIUSEPPE">MARLIERI GIUSEPPE</option>
+                        <option value="MARZAROLI EMILIO">MARZAROLI EMILIO</option>
+                        <option value="PICCOLI GIULIANO">PICCOLI GIULIANO</option>
+                        <option value="IVAN ISOPESCU">IVAN ISOPESCU</option>
+                        <option value="MAZZOCCHI MIRCO">MAZZOCCHI MIRCO</option>
+                        <option value="MOIA LUIGI">MOIA LUIGI</option>
+                    </select>
+                </div>
+                <button type="button" class="no-print" onclick="this.parentElement.remove(); saveDraft();" style="background:#ff4444; color:white; border:none; border-radius:3px; padding:0 8px; font-weight:bold; cursor:pointer;">X</button>
+            `;
+            container.appendChild(div);
+            attachListeners();
+        }
+
+        async function importaDaCalendario() {
+            const t1 = document.getElementsByName('tecnico_1')[0].value;
+            if (!t1) return alert("Inserisci un tecnico nel primo campo!");
+            
+            try {
+                const response = await fetch(`${APP_SCRIPT_URL}?tecnico=${encodeURIComponent(t1)}`);
+                const data = await response.json();
+                
+                if (data.cliente !== undefined) {
+                    document.getElementById('n_rapporto_input').value = data.tck || "";
+                    document.getElementById('macchina_input').value = (data.matricola || "").toUpperCase();
+                    document.getElementById('descrizione_input').value = (data.problema || "").toUpperCase();
+                    document.getElementById('cliente_input').value = (data.cliente || "").toUpperCase();
+                    document.getElementById('indirizzo_input').value = (data.indirizzo || "").toUpperCase();
+
+                    const container = document.getElementById('lista-tecnici-inputs');
+                    while (container.children.length > 1) { container.removeChild(container.lastChild); }
+                    
+                    if(data.tecnici && data.tecnici.length > 0) {
+                        document.getElementsByName('tecnico_1')[0].value = data.tecnici[0].toUpperCase();
+                        for (let i = 1; i < data.tecnici.length; i++) {
+                            aggiungiRigaTecnico(data.tecnici[i].toUpperCase());
+                        }
+                    }
+                    saveDraft();
+                } else { alert("Nessun evento trovato oggi."); }
+            } catch (e) { alert("Errore connessione."); }
+        }
+
+        function condividiWhatsApp() {
+            const element = document.getElementById('rapporto-foglio');
+            const nRapp = document.getElementById('n_rapporto_input').value || 'Nuovo';
+            const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
+            const fileName = `Rapporto_${nRapp}_${nomeCliente}.pdf`.replace(/ /g, "_");
+
+            const opt = { margin: 0, filename: fileName, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+            alert("Generazione del PDF in corso... Attendi l'apertura del menu di condivisione.");
+
+            html2pdf().set(opt).from(element).output('blob').then(function(pdfBlob) {
+                const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    navigator.share({ title: 'Rapporto di Intervento', text: 'In allegato il rapporto di intervento.', files: [file] });
+                } else {
+                    html2pdf().set(opt).from(element).save();
+                    alert("Il tuo dispositivo non supporta l'invio diretto. Il PDF è stato scaricato.");
+                }
+            });
+        }
+
+        // NUOVA FUNZIONE: Invia Email via Google Apps Script
+        function inviaEmailAutomaticamente() {
+            const emailCliente = document.getElementById('email_input').value;
+            const element = document.getElementById('rapporto-foglio');
+            const nRapp = document.getElementById('n_rapporto_input').value || 'Nuovo';
+            const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
+            const fileName = `Rapporto_${nRapp}_${nomeCliente}.pdf`.replace(/ /g, "_");
+
+            // Verifica che ci sia almeno una traccia di aver compilato il rapporto
+            if (!nRapp || nRapp === "Nuovo") {
+                if(!confirm("Sicuro di voler inviare il modulo senza aver compilato il N. Rapporto?")) return;
+            }
+
+            document.getElementById('loading-overlay').style.display = 'flex';
+
+            const opt = { margin: 0, filename: fileName, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+
+            html2pdf().set(opt).from(element).outputPdf('datauristring').then(function(pdfBase64) {
+                const payload = {
+                    pdfBase64: pdfBase64,
+                    filename: fileName,
+                    ticket: nRapp,
+                    nomeCliente: nomeCliente,
+                    emailCliente: emailCliente
+                };
+                
+                // L'uso di text/plain evita i blocchi di sicurezza CORS del browser
+                fetch(APP_SCRIPT_URL, {
+                    method: "POST",
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    if(data.success) {
+                        alert("Email inviata con successo in sede " + (emailCliente ? "e al cliente!" : "(nessuna email cliente inserita)."));
+                    } else {
+                        alert("Errore invio: " + data.error);
+                    }
+                })
+                .catch(e => {
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    alert("Errore di rete durante l'invio.");
+                });
+            });
+        }
+
+        function setTipo(val) {
+            document.getElementById('tipo_int_hidden').value = val;
+            document.getElementById('box-G').className = 'tipo-box' + (val === 'G' ? ' active' : '');
+            document.getElementById('box-P').className = 'tipo-box' + (val === 'P' ? ' active' : '');
+            saveDraft();
+        }
+
+        function getTimeOptions() {
+            let opt = '<option value="">--</option>';
+            for(let h=5; h<=22; h++) {
+                let hh = h < 10 ? '0'+h : h;
+                ['00','30'].forEach(mm => { if(!(h==22 && mm=='30')) opt += `<option value="${hh}:${mm}">${hh}:${mm}</option>`; });
+            }
+            return opt;
+        }
+
+        function addRow() {
+            if (rowCount >= 6) return;
+            rowCount++; const opt = getTimeOptions();
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><input type="date" class="save-data" name="d_${rowCount}" style="font-size:9px;"></td>
+                <td><select class="save-data time-select" name="va1_${rowCount}">${opt}</select></td><td><select class="save-data time-select" name="va2_${rowCount}">${opt}</select></td>
+                <td><select class="save-data time-select" name="lm1_${rowCount}">${opt}</select></td><td><select class="save-data time-select" name="lm2_${rowCount}">${opt}</select></td>
+                <td><select class="save-data time-select" name="lp1_${rowCount}">${opt}</select></td><td><select class="save-data time-select" name="lp2_${rowCount}">${opt}</select></td>
+                <td><select class="save-data time-select" name="vr1_${rowCount}">${opt}</select></td><td><select class="save-data time-select" name="vr2_${rowCount}">${opt}</select></td>
+                <td><div class="pch-row">
+                    P<input type="checkbox" class="save-data" name="p_${rowCount}">
+                    C<input type="checkbox" class="save-data" name="c_${rowCount}">
+                    H<input type="checkbox" class="save-data" name="h_${rowCount}">
+                </div></td>`;
+            document.getElementById('table-body').appendChild(tr); attachListeners();
+        }
+
+        function addRicambio() {
+            ricCount++;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><input type="text" class="save-data caps" name="rc_${ricCount}"></td><td><input type="text" class="save-data caps" name="rd_${ricCount}"></td>
+                <td><input type="number" class="save-data qta" name="rq_${ricCount}" oninput="calc()"></td><td><input type="number" class="save-data unit" name="ru_${ricCount}" step="0.01" oninput="calc()"></td>
+                <td><input type="text" id="rt_${ricCount}" readonly style="background:#f9f9f9;"></td>`;
+            document.getElementById('ricambi-body').appendChild(tr); attachListeners();
+        }
+
+        function calc() {
+            let gt = 0;
+            for(let i=1; i<=ricCount; i++) {
+                const qInput = document.getElementsByName(`rq_${i}`)[0];
+                const uInput = document.getElementsByName(`ru_${i}`)[0];
+                const tOutput = document.getElementById(`rt_${i}`);
+                if(qInput && uInput && tOutput) {
+                    const q = parseFloat(qInput.value) || 0;
+                    const u = parseFloat(uInput.value) || 0;
+                    const tot = q * u;
+                    tOutput.value = tot.toFixed(2);
+                    gt += tot;
+                }
+            }
+            document.getElementById('gran-totale').innerText = gt.toFixed(2) + " €";
+            saveDraft();
+        }
+
+        function openSignature() {
+            document.getElementById('signature-overlay').style.display = 'flex';
+            canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
+            ctx.lineWidth = 3; ctx.strokeStyle = "#000"; ctx.lineCap = "round";
+        }
+        function closeSignature(save) {
+            if(save) {
+                const url = canvas.toDataURL();
+                document.getElementById('sig-image').src = url;
+                document.getElementById('sig-image').style.display = 'block';
+                document.getElementById('placeholder-firma').style.display = 'none';
+                localStorage.setItem('tmc_sig', url);
+            }
+            document.getElementById('signature-overlay').style.display = 'none';
+        }
+        function clearSignature() { ctx.clearRect(0,0,canvas.width, canvas.height); }
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const cx = e.touches ? e.touches[0].clientX : e.clientX;
+            const cy = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: cx - rect.left, y: cy - rect.top };
+        }
+        canvas.addEventListener('touchstart', (e) => { drawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); e.preventDefault(); });
+        canvas.addEventListener('touchmove', (e) => { if(!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); });
+        canvas.addEventListener('touchend', () => drawing = false);
+
+        function saveDraft() {
+            const data = {}; document.querySelectorAll('.save-data').forEach(el => data[el.name] = (el.type==='checkbox' ? el.checked : el.value));
+            localStorage.setItem('tmc_bozza', JSON.stringify(data));
+            localStorage.setItem('tmc_counts', JSON.stringify({r:rowCount, ric:ricCount}));
+        }
+        function loadDraft() {
+            const counts = JSON.parse(localStorage.getItem('tmc_counts') || '{"r":1,"ric":1}');
+            document.getElementById('table-body').innerHTML = "";
+            document.getElementById('ricambi-body').innerHTML = "";
+            rowCount = 0; ricCount = 0;
+            for(let i=0; i<counts.r; i++) addRow();
+            for(let i=0; i<counts.ric; i++) addRicambio();
+            const saved = JSON.parse(localStorage.getItem('tmc_bozza') || '{}');
+            
+            let tCount = 1;
+            while(saved['tecnico_' + tCount] !== undefined) {
+                if(tCount > 1) aggiungiRigaTecnico(saved['tecnico_' + tCount]);
+                else document.getElementsByName('tecnico_1')[0].value = (saved['tecnico_1'] || "").toUpperCase();
+                tCount++;
+            }
+            document.querySelectorAll('.save-data').forEach(el => { 
+                if(saved[el.name]!==undefined) el.type==='checkbox' ? el.checked=saved[el.name] : el.value=saved[el.name]; 
+            });
+            const sig = localStorage.getItem('tmc_sig');
+            if(sig) { document.getElementById('sig-image').src = sig; document.getElementById('sig-image').style.display='block'; document.getElementById('placeholder-firma').style.display='none'; }
+            setTipo(saved['tipo_int'] || 'P');
+            calc();
+        }
+        function attachListeners() { document.querySelectorAll('.save-data').forEach(el => el.oninput = calc); }
+        function nuovoRapporto() { if(confirm("Resettare tutto?")) { localStorage.clear(); location.reload(); } }
+
+        window.onload = loadDraft;
+    </script>
+</body>
+</html>

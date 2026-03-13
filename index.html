@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" id="viewport-meta">
     <title>TMC Service - App Rapporti A4</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -20,14 +20,21 @@
             .page-a4 { width: 100%; margin: 0; padding: 10px; box-shadow: none; }
         }
 
-        /* FORZATURA A4 PER PDF DA MOBILE: ignora lo schermo piccolo e impagina come su PC */
+        /* TRUCCO PDF: Quando scatta la foto, blocca le dimensioni fisse su A4 */
+        body.pdf-mode { background: white !important; }
         body.pdf-mode .page-a4 {
             width: 210mm !important;
-            max-width: 210mm !important;
-            min-height: 297mm !important;
-            padding: 10mm !important;
+            height: 297mm !important; /* Forza altezza esatta per evitare pag. 2 */
+            max-width: none !important;
+            min-height: auto !important;
             margin: 0 !important;
+            padding: 10mm !important;
+            box-shadow: none !important;
+            border: none !important;
+            transform: none !important;
+            overflow: hidden !important;
         }
+        body.pdf-mode .no-print { display: none !important; }
 
         .banner-static { width: 100%; display: block; }
         .main-title-container { 
@@ -76,8 +83,6 @@
         .btn-dark { background: #444; }
         .btn-sync { position: absolute; right: 10px; top: 10px; font-size: 20px; background: none; border: none; cursor: pointer; z-index: 10; }
 
-        .html2pdf__container .no-print { display: none !important; }
-
         @media print { 
             body { background: white; }
             .page-a4 { margin: 0; border: none; box-shadow: none; width: 210mm; height: 297mm; }
@@ -88,7 +93,7 @@
         .spinner { border: 6px solid #f3f3f3; border-top: 6px solid var(--tmc-blue); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* NUOVO: Stili per il Login */
+        /* Stili Login */
         #login-overlay { 
             display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: #525659; z-index: 99999; flex-direction: column; justify-content: center; align-items: center; 
@@ -146,7 +151,6 @@
                                         <input type="text" name="tecnico_1" class="save-data tecnico-input-main caps" placeholder="Scrivi o seleziona...">
                                         <select class="tecnico-select-bg" onchange="this.previousElementSibling.value=this.value; saveDraft();">
                                             <option value=""></option>
-                                            <option value="RIMONDI MARCO">MARCO</option>
                                             <option value="CARINI MARCO">CARINI MARCO</option>
                                             <option value="LIVIU CIORICI">LIVIU CIORICI</option>
                                             <option value="MARIN CIORESCU">MARIN CIORESCU</option>
@@ -265,14 +269,14 @@
     
     <div id="loading-overlay">
         <div class="spinner"></div>
-        <div>Invio email in corso... Attendere</div>
+        <div>Generazione e Invio... Attendere</div>
     </div>
 
     <script>
         const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxh6R-LKwzIsbzNgTyf41AZTs3fxd_CqTE2bLQLQFcx7mwpb-ueqOARluwFPQFW47jM/exec";
         
         // --- LOGICA DI LOGIN ---
-        const PIN_SEGRETO = "TMC2026"; // <--- PUOI CAMBIARE LA PASSWORD QUI
+        const PIN_SEGRETO = "TMC2026";
 
         function verificaLogin() {
             const input = document.getElementById('pin_input').value.toUpperCase();
@@ -294,10 +298,9 @@
         function sbloccaApp() {
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
-            loadDraft(); // Carica i dati salvati solo dopo il login
+            loadDraft(); 
         }
-
-        // --- FINE LOGICA LOGIN ---
+        // --- FINE LOGIN ---
 
         let rowCount = 0; let ricCount = 0;
         const canvas = document.getElementById('canvas-fullscreen');
@@ -317,6 +320,8 @@
                     <input type="text" name="tecnico_${idx}" class="save-data tecnico-input-main caps" value="${valore.toUpperCase()}">
                     <select class="tecnico-select-bg" onchange="this.previousElementSibling.value=this.value; saveDraft();">
                         <option value=""></option>
+                        <option value="LUIGI">LUIGI</option>
+                        <option value="MARCO">MARCO</option>
                         <option value="CARINI MARCO">CARINI MARCO</option>
                         <option value="LIVIU CIORICI">LIVIU CIORICI</option>
                         <option value="MARIN CIORESCU">MARIN CIORESCU</option>
@@ -369,12 +374,28 @@
             } catch (e) { alert("Errore connessione."); }
         }
 
+        // --- SISTEMA PREPARAZIONE SCHERMO PER PDF DA MOBILE ---
+        function preparaSchermoPerPDF() {
+            // 1. Scorre in alto (altrimenti taglia la parte superiore su mobile)
+            window.scrollTo(0, 0);
+            // 2. Inganna il browser allargando il viewport come fosse un desktop
+            document.getElementById('viewport-meta').setAttribute('content', 'width=1024');
+            // 3. Applica la classe che forza le misure perfette
+            document.body.classList.add('pdf-mode');
+        }
+
+        function ripristinaSchermo() {
+            // Ritorna alla normalità per il cellulare
+            document.getElementById('viewport-meta').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+            document.body.classList.remove('pdf-mode');
+        }
+
         function getPdfOptions(fileName) {
             return {
                 margin: 0, 
                 filename: fileName, 
                 image: { type: 'jpeg', quality: 0.98 }, 
-                html2canvas: { scale: 2, useCORS: true, windowWidth: 1024 }, 
+                html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, 
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
         }
@@ -385,22 +406,23 @@
             const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
             const fileName = `Rapporto_${nRapp}_${nomeCliente}.pdf`.replace(/ /g, "_");
 
-            const opt = getPdfOptions(fileName);
             alert("Generazione del PDF in corso... Attendi l'apertura del menu di condivisione.");
+            
+            preparaSchermoPerPDF();
 
-            document.body.classList.add('pdf-mode');
-
-            html2pdf().set(opt).from(element).output('blob').then(function(pdfBlob) {
-                document.body.classList.remove('pdf-mode');
-                
-                const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    navigator.share({ title: 'Rapporto di Intervento', text: 'In allegato il rapporto di intervento.', files: [file] });
-                } else {
-                    html2pdf().set(opt).from(element).save();
-                    alert("Il tuo dispositivo non supporta l'invio diretto. Il PDF è stato scaricato.");
-                }
-            }).catch(err => document.body.classList.remove('pdf-mode'));
+            // Timeout per dare al browser 100ms per allargare effettivamente lo schermo prima della "foto"
+            setTimeout(() => {
+                html2pdf().set(getPdfOptions(fileName)).from(element).output('blob').then(function(pdfBlob) {
+                    ripristinaSchermo();
+                    const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        navigator.share({ title: 'Rapporto di Intervento', text: 'In allegato il rapporto di intervento.', files: [file] });
+                    } else {
+                        html2pdf().set(getPdfOptions(fileName)).from(element).save();
+                        alert("Il dispositivo non supporta l'invio diretto. Il PDF è stato scaricato.");
+                    }
+                }).catch(err => ripristinaSchermo());
+            }, 100);
         }
 
         function inviaEmailAutomaticamente() {
@@ -415,41 +437,39 @@
             }
 
             document.getElementById('loading-overlay').style.display = 'flex';
-            
-            const opt = getPdfOptions(fileName);
-            document.body.classList.add('pdf-mode');
+            preparaSchermoPerPDF();
 
-            html2pdf().set(opt).from(element).outputPdf('datauristring').then(function(pdfBase64) {
-                document.body.classList.remove('pdf-mode');
-
-                const payload = {
-                    pdfBase64: pdfBase64,
-                    filename: fileName,
-                    ticket: nRapp,
-                    nomeCliente: nomeCliente,
-                    emailCliente: emailCliente
-                };
-                
-                fetch(APP_SCRIPT_URL, {
-                    method: "POST",
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify(payload)
-                })
-                .then(response => response.json())
-                .then(data => {
+            setTimeout(() => {
+                html2pdf().set(getPdfOptions(fileName)).from(element).outputPdf('datauristring').then(function(pdfBase64) {
+                    ripristinaSchermo();
+                    const payload = { pdfBase64: pdfBase64, filename: fileName, ticket: nRapp, nomeCliente: nomeCliente, emailCliente: emailCliente };
+                    
+                    fetch(APP_SCRIPT_URL, {
+                        method: "POST",
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('loading-overlay').style.display = 'none';
+                        if(data.success) {
+                            alert("Email inviata con successo in sede " + (emailCliente ? "e al cliente!" : "(nessuna email cliente inserita)."));
+                        } else {
+                            alert("Errore invio: " + data.error);
+                        }
+                    })
+                    .catch(e => {
+                        document.getElementById('loading-overlay').style.display = 'none';
+                        alert("Errore di rete durante l'invio.");
+                    });
+                }).catch(err => {
+                    ripristinaSchermo();
                     document.getElementById('loading-overlay').style.display = 'none';
-                    if(data.success) {
-                        alert("Email inviata con successo in sede " + (emailCliente ? "e al cliente!" : "(nessuna email cliente inserita)."));
-                    } else {
-                        alert("Errore invio: " + data.error);
-                    }
-                })
-                .catch(e => {
-                    document.getElementById('loading-overlay').style.display = 'none';
-                    alert("Errore di rete durante l'invio.");
                 });
-            }).catch(err => document.body.classList.remove('pdf-mode'));
+            }, 100);
         }
+
+        // ----------------------------------------------
 
         function setTipo(val) {
             document.getElementById('tipo_int_hidden').value = val;
@@ -569,7 +589,6 @@
         function nuovoRapporto() { if(confirm("Resettare tutto?")) { localStorage.clear(); location.reload(); } }
 
         window.onload = function() {
-            // Controlla se l'utente ha già fatto il login in passato
             if(localStorage.getItem('tmc_auth_token') === 'ACCESSO_CONSENTITO') {
                 sbloccaApp();
             } else {
@@ -577,7 +596,6 @@
                 document.getElementById('app-content').style.display = 'none';
             }
             
-            // Permetti login premendo "Invio" sulla tastiera
             document.getElementById('pin_input').addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
                     event.preventDefault();
@@ -588,5 +606,3 @@
     </script>
 </body>
 </html>
-
-

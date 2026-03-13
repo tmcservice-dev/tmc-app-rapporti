@@ -367,6 +367,16 @@
             }
         }
 
+        // --- NUOVO: CONTROLLO FIRMA OBBLIGATORIA ---
+        function controllaFirma() {
+            const signatureData = localStorage.getItem('tmc_sig');
+            if (!signatureData) {
+                alert("⚠️ ATTENZIONE: Manca la firma!\n\nPer favore, fai firmare il rapporto al cliente o al responsabile prima di inviarlo.");
+                return false;
+            }
+            return true;
+        }
+
         async function importaDaCalendario() {
             const t1 = document.getElementsByName('tecnico_1')[0].value;
             if (!t1) return alert("Inserisci un tecnico nel primo campo!");
@@ -392,7 +402,6 @@
                         }
                     }
                     
-                    // Ripulisce il vecchio ID per forzarne uno nuovo
                     document.getElementById('id_univoco_input').value = ""; 
                     generaIdUnivoco();
                     saveDraft();
@@ -431,6 +440,8 @@
         }
 
         function condividiWhatsApp() {
+            if (!controllaFirma()) return; // <-- BLOCCA SE MANCA LA FIRMA
+
             generaIdUnivoco();
             const element = document.getElementById('rapporto-foglio');
             const idUnivoco = document.getElementById('id_univoco_input').value;
@@ -456,6 +467,8 @@
         }
 
         function inviaEmailAutomaticamente() {
+            if (!controllaFirma()) return; // <-- BLOCCA SE MANCA LA FIRMA
+
             generaIdUnivoco();
             const emailCliente = document.getElementById('email_input').value;
             const element = document.getElementById('rapporto-foglio');
@@ -469,7 +482,6 @@
             setTimeout(() => {
                 html2pdf().set(getPdfOptions(fileName)).from(element).outputPdf('datauristring').then(function(pdfBase64) {
                     ripristinaSchermo();
-                    // Invia l'ID Univoco a Google Apps Script rimpiazzando il vecchio ticket
                     const payload = { pdfBase64: pdfBase64, filename: fileName, ticket: idUnivoco, nomeCliente: nomeCliente, emailCliente: emailCliente };
                     
                     fetch(APP_SCRIPT_URL, {

@@ -24,7 +24,7 @@
         body.pdf-mode { background: white !important; }
         body.pdf-mode .page-a4 {
             width: 210mm !important;
-            height: 297mm !important; /* Forza altezza esatta per evitare pag. 2 */
+            height: 297mm !important; 
             max-width: none !important;
             min-height: auto !important;
             margin: 0 !important;
@@ -69,7 +69,6 @@
         .bottom-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; margin-top: auto; padding-top: 10px; }
         .dotted-line { border-bottom: 1px dotted var(--tmc-blue); height: 18px; margin-bottom: 5px; }
         
-        /* Modifiche per Firma più grande */
         .sig-preview { border: 2px dashed var(--tmc-blue); width: 100%; height: 120px; background: #f9f9f9; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 5px; box-sizing: border-box; }
         .sig-preview img { width: 100%; height: 100%; object-fit: contain; }
 
@@ -132,7 +131,10 @@
             <img src="static/intestazione.jpg" class="banner-static">
 
             <div class="main-title-container">
-                <span>RAPPORTO INTERVENTO N. <input type="text" id="n_rapporto_input" name="n_rapporto" class="save-data caps" placeholder="XXXX" style="width:140px; font-size:16px; font-weight:bold; color:var(--tmc-blue);"></span>
+                <div style="display:flex; flex-direction:column; gap:2px;">
+                    <span>RAPPORTO INTERVENTO N. <input type="text" id="n_rapporto_input" name="n_rapporto" class="save-data caps" placeholder="XXXX" style="width:70px; font-size:16px; font-weight:bold; color:var(--tmc-blue);"></span>
+                    <span style="font-size:9px; color:#666; font-weight:normal;">ID FATTURAZIONE: <input type="text" id="id_univoco_input" name="id_univoco" class="save-data" readonly style="width:130px; font-size:9px; color:#666; border:none; outline:none; background:transparent;" placeholder="In attesa..."></span>
+                </div>
                 <div style="display:flex; gap:8px;">
                     <div id="box-G" class="tipo-box" onclick="setTipo('G')">GRATUITO</div>
                     <div id="box-P" class="tipo-box" onclick="setTipo('P')">PAGAMENTO</div>
@@ -308,7 +310,6 @@
             document.getElementById('app-content').style.display = 'block';
             loadDraft(); 
         }
-        // --- FINE LOGIN ---
 
         let rowCount = 0; let ricCount = 0;
         const canvas = document.getElementById('canvas-fullscreen');
@@ -351,6 +352,21 @@
             attachListeners();
         }
 
+        function generaIdUnivoco() {
+            let idInput = document.getElementById('id_univoco_input');
+            if (!idInput.value || idInput.value === "") {
+                const now = new Date();
+                const yy = String(now.getFullYear()).slice(-2);
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                const hh = String(now.getHours()).padStart(2, '0');
+                const min = String(now.getMinutes()).padStart(2, '0');
+                const tckPart = document.getElementById('n_rapporto_input').value || "M";
+                idInput.value = `${tckPart}-${yy}${mm}${dd}-${hh}${min}`;
+                saveDraft();
+            }
+        }
+
         async function importaDaCalendario() {
             const t1 = document.getElementsByName('tecnico_1')[0].value;
             if (!t1) return alert("Inserisci un tecnico nel primo campo!");
@@ -375,6 +391,10 @@
                             aggiungiRigaTecnico(data.tecnici[i].toUpperCase());
                         }
                     }
+                    
+                    // Ripulisce il vecchio ID per forzarne uno nuovo
+                    document.getElementById('id_univoco_input').value = ""; 
+                    generaIdUnivoco();
                     saveDraft();
                 } else { alert("Nessun evento trovato oggi."); }
             } catch (e) { alert("Errore connessione."); }
@@ -411,10 +431,11 @@
         }
 
         function condividiWhatsApp() {
+            generaIdUnivoco();
             const element = document.getElementById('rapporto-foglio');
-            const nRapp = document.getElementById('n_rapporto_input').value || 'Nuovo';
+            const idUnivoco = document.getElementById('id_univoco_input').value;
             const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
-            const fileName = `Rapporto_${nRapp}_${nomeCliente}.pdf`.replace(/ /g, "_");
+            const fileName = `Rapporto_${idUnivoco}_${nomeCliente}.pdf`.replace(/ /g, "_");
 
             alert("Generazione del PDF in corso... Attendi l'apertura del menu di condivisione.");
             
@@ -435,15 +456,12 @@
         }
 
         function inviaEmailAutomaticamente() {
+            generaIdUnivoco();
             const emailCliente = document.getElementById('email_input').value;
             const element = document.getElementById('rapporto-foglio');
-            const nRapp = document.getElementById('n_rapporto_input').value || 'Nuovo';
+            const idUnivoco = document.getElementById('id_univoco_input').value;
             const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
-            const fileName = `Rapporto_${nRapp}_${nomeCliente}.pdf`.replace(/ /g, "_");
-
-            if (!nRapp || nRapp === "Nuovo") {
-                if(!confirm("Sicuro di voler inviare il modulo senza aver compilato il N. Rapporto?")) return;
-            }
+            const fileName = `Rapporto_${idUnivoco}_${nomeCliente}.pdf`.replace(/ /g, "_");
 
             document.getElementById('loading-overlay').style.display = 'flex';
             preparaSchermoPerPDF();
@@ -451,7 +469,8 @@
             setTimeout(() => {
                 html2pdf().set(getPdfOptions(fileName)).from(element).outputPdf('datauristring').then(function(pdfBase64) {
                     ripristinaSchermo();
-                    const payload = { pdfBase64: pdfBase64, filename: fileName, ticket: nRapp, nomeCliente: nomeCliente, emailCliente: emailCliente };
+                    // Invia l'ID Univoco a Google Apps Script rimpiazzando il vecchio ticket
+                    const payload = { pdfBase64: pdfBase64, filename: fileName, ticket: idUnivoco, nomeCliente: nomeCliente, emailCliente: emailCliente };
                     
                     fetch(APP_SCRIPT_URL, {
                         method: "POST",

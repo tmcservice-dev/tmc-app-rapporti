@@ -68,8 +68,10 @@
 
         .bottom-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; margin-top: auto; padding-top: 10px; }
         .dotted-line { border-bottom: 1px dotted var(--tmc-blue); height: 18px; margin-bottom: 5px; }
-        .sig-preview { border: 2px dashed var(--tmc-blue); width: 100%; height: 90px; background: #f9f9f9; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .sig-preview img { max-height: 90%; }
+        
+        /* Modifiche per Firma più grande */
+        .sig-preview { border: 2px dashed var(--tmc-blue); width: 100%; height: 120px; background: #f9f9f9; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 5px; box-sizing: border-box; }
+        .sig-preview img { width: 100%; height: 100%; object-fit: contain; }
 
         #signature-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index: 9999; flex-direction: column; }
         #canvas-fullscreen { flex-grow: 1; border: 3px solid var(--tmc-blue); margin: 15px; background: #fafafa; touch-action: none; }
@@ -233,7 +235,12 @@
                     <div style="font-size:7px;">VIAGGIO:<div class="dotted-line"></div></div>
                     <div style="font-size:7px;">TRASFERTA / ALTRO:<div class="dotted-line"></div><div class="dotted-line"></div></div>
                 </div>
-                <div class="sig-box">
+                
+                <div class="sig-box" style="display:flex; flex-direction:column; justify-content:flex-end;">
+                    <div class="input-field" style="margin-bottom: 5px;">
+                        <label style="color:var(--tmc-blue); font-weight:bold; font-size:8px;">RESPONSABILE (NOME E COGNOME)</label>
+                        <input type="text" name="nome_responsabile" class="save-data caps" placeholder="Es. Mario Rossi" style="font-size:12px; font-weight:bold; border-bottom: 1px solid var(--tmc-blue); text-align:center;">
+                    </div>
                     <label style="color:var(--tmc-blue); font-weight:bold; font-size:8px;">FIRMA CLIENTE (TOCCA PER FIRMARE)</label>
                     <div id="firma-preview" class="sig-preview" onclick="openSignature()">
                         <span id="placeholder-firma" style="color:#aaa; font-size:10px; text-align:center;">Firma a schermo intero</span>
@@ -373,16 +380,14 @@
             } catch (e) { alert("Errore connessione."); }
         }
 
-        // --- SISTEMA PREPARAZIONE SCHERMO PER PDF DA MOBILE ---
         function preparaSchermoPerPDF() {
             window.scrollTo(0, 0);
             document.getElementById('viewport-meta').setAttribute('content', 'width=1024');
             document.body.classList.add('pdf-mode');
             
-            // TRUCCO TEXTAREA: Trasferisce il testo dalla textarea al div visibile per stampare a capo
             const txtArea = document.getElementById('descrizione_input');
             const txtPrint = document.getElementById('descrizione_print');
-            txtPrint.innerText = txtArea.value; // innerText preserva i ritorni a capo
+            txtPrint.innerText = txtArea.value; 
             txtArea.style.display = 'none';
             txtPrint.style.display = 'block';
         }
@@ -391,7 +396,6 @@
             document.getElementById('viewport-meta').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
             document.body.classList.remove('pdf-mode');
             
-            // RIPRISTINO TEXTAREA
             document.getElementById('descrizione_input').style.display = 'block';
             document.getElementById('descrizione_print').style.display = 'none';
         }
@@ -473,8 +477,6 @@
                 });
             }, 100);
         }
-
-        // ----------------------------------------------
 
         function setTipo(val) {
             document.getElementById('tipo_int_hidden').value = val;
@@ -611,4 +613,3 @@
     </script>
 </body>
 </html>
-

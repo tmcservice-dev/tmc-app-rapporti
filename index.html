@@ -151,8 +151,6 @@
                                         <input type="text" name="tecnico_1" class="save-data tecnico-input-main caps" placeholder="Scrivi o seleziona...">
                                         <select class="tecnico-select-bg" onchange="this.previousElementSibling.value=this.value; saveDraft();">
                                             <option value=""></option>
-                                            <option value="MARCO">MARCO</option>
-                                            <option value="LUIGI">LUIGI </option>
                                             <option value="CARINI MARCO">CARINI MARCO</option>
                                             <option value="LIVIU CIORICI">LIVIU CIORICI</option>
                                             <option value="MARIN CIORESCU">MARIN CIORESCU</option>
@@ -219,6 +217,7 @@
             <div class="card" style="margin-top:10px;">
                 <label style="color:var(--tmc-blue); font-weight:bold;">PROBLEMA SEGNALATO</label>
                 <textarea id="descrizione_input" name="descrizione" class="save-data caps" rows="3"></textarea>
+                <div id="descrizione_print" class="caps" style="display:none; white-space: pre-wrap; word-break: break-word; font-size: 12px; min-height: 45px; border-bottom: 1px solid #cce0f5; padding: 4px 0;"></div>
             </div>
 
             <table>
@@ -322,8 +321,6 @@
                     <input type="text" name="tecnico_${idx}" class="save-data tecnico-input-main caps" value="${valore.toUpperCase()}">
                     <select class="tecnico-select-bg" onchange="this.previousElementSibling.value=this.value; saveDraft();">
                         <option value=""></option>
-                        <option value="LUIGI">LUIGI</option>
-                        <option value="MARCO">MARCO</option>
                         <option value="CARINI MARCO">CARINI MARCO</option>
                         <option value="LIVIU CIORICI">LIVIU CIORICI</option>
                         <option value="MARIN CIORESCU">MARIN CIORESCU</option>
@@ -378,18 +375,25 @@
 
         // --- SISTEMA PREPARAZIONE SCHERMO PER PDF DA MOBILE ---
         function preparaSchermoPerPDF() {
-            // 1. Scorre in alto (altrimenti taglia la parte superiore su mobile)
             window.scrollTo(0, 0);
-            // 2. Inganna il browser allargando il viewport come fosse un desktop
             document.getElementById('viewport-meta').setAttribute('content', 'width=1024');
-            // 3. Applica la classe che forza le misure perfette
             document.body.classList.add('pdf-mode');
+            
+            // TRUCCO TEXTAREA: Trasferisce il testo dalla textarea al div visibile per stampare a capo
+            const txtArea = document.getElementById('descrizione_input');
+            const txtPrint = document.getElementById('descrizione_print');
+            txtPrint.innerText = txtArea.value; // innerText preserva i ritorni a capo
+            txtArea.style.display = 'none';
+            txtPrint.style.display = 'block';
         }
 
         function ripristinaSchermo() {
-            // Ritorna alla normalità per il cellulare
             document.getElementById('viewport-meta').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
             document.body.classList.remove('pdf-mode');
+            
+            // RIPRISTINO TEXTAREA
+            document.getElementById('descrizione_input').style.display = 'block';
+            document.getElementById('descrizione_print').style.display = 'none';
         }
 
         function getPdfOptions(fileName) {
@@ -412,7 +416,6 @@
             
             preparaSchermoPerPDF();
 
-            // Timeout per dare al browser 100ms per allargare effettivamente lo schermo prima della "foto"
             setTimeout(() => {
                 html2pdf().set(getPdfOptions(fileName)).from(element).output('blob').then(function(pdfBlob) {
                     ripristinaSchermo();
@@ -608,4 +611,3 @@
     </script>
 </body>
 </html>
-

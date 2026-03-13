@@ -15,7 +15,6 @@
             display: flex; flex-direction: column; position: relative;
         }
 
-        /* Responsive per i telefoni */
         @media screen and (max-width: 210mm) {
             body { background: white; }
             .page-a4 { width: 100%; margin: 0; padding: 10px; box-shadow: none; }
@@ -88,135 +87,167 @@
         #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; color: white; flex-direction: column; justify-content: center; align-items: center; font-family: sans-serif; font-weight: bold; }
         .spinner { border: 6px solid #f3f3f3; border-top: 6px solid var(--tmc-blue); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* NUOVO: Stili per il Login */
+        #login-overlay { 
+            display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: #525659; z-index: 99999; flex-direction: column; justify-content: center; align-items: center; 
+        }
+        .login-box { 
+            background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); 
+            text-align: center; color: var(--tmc-dark); width: 80%; max-width: 320px; 
+        }
+        .login-box input { 
+            border: 2px solid var(--tmc-blue); padding: 12px; margin: 20px 0; width: calc(100% - 24px); 
+            font-size: 18px; text-align: center; border-radius: 5px; outline: none; 
+        }
+        .login-box button { 
+            background: var(--tmc-blue); color: white; border: none; padding: 15px; 
+            font-size: 16px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; 
+        }
     </style>
 </head>
 <body>
 
-    <div class="page-a4" id="rapporto-foglio">
-        <img src="static/intestazione.jpg" class="banner-static">
-
-        <div class="main-title-container">
-            <span>RAPPORTO INTERVENTO N. <input type="text" id="n_rapporto_input" name="n_rapporto" class="save-data caps" placeholder="XXXX" style="width:140px; font-size:16px; font-weight:bold; color:var(--tmc-blue);"></span>
-            <div style="display:flex; gap:8px;">
-                <div id="box-G" class="tipo-box" onclick="setTipo('G')">GRATUITO</div>
-                <div id="box-P" class="tipo-box" onclick="setTipo('P')">PAGAMENTO</div>
-                <input type="hidden" name="tipo_int" id="tipo_int_hidden" class="save-data" value="P">
-            </div>
+    <div id="login-overlay">
+        <div class="login-box">
+            <img src="static/intestazione.jpg" style="width: 100%; margin-bottom: 10px;">
+            <h3 style="color:var(--tmc-blue); margin-bottom: 5px;">Accesso Riservato</h3>
+            <p style="font-size: 12px; color: #666; margin-top: 0;">Inserisci la password per continuare</p>
+            <input type="password" id="pin_input" placeholder="Password">
+            <button onclick="verificaLogin()">ACCEDI</button>
+            <p id="login-error" style="color:red; font-size:13px; display:none; margin-top:15px; font-weight:bold;">Password errata. Riprova.</p>
         </div>
-
-        <div class="card">
-            <button type="button" class="btn-sync no-print" onclick="importaDaCalendario()" title="Sincronizza">🔄</button>
-            
-            <div class="grid-header">
-                <div>
-                    <div class="input-field" style="margin-bottom:10px;">
-                        <label>Tecnico/i Incaricato/i</label>
-                        <div id="lista-tecnici-inputs">
-                            <div class="tecnico-riga" style="display:flex; gap:5px; margin-top:5px;">
-                                <div class="tecnico-combo" style="flex:1;">
-                                    <input type="text" name="tecnico_1" class="save-data tecnico-input-main caps" placeholder="Scrivi o seleziona...">
-                                    <select class="tecnico-select-bg" onchange="this.previousElementSibling.value=this.value; saveDraft();">
-                                        <option value=""></option>
-                                        <option value="CARINI MARCO">CARINI MARCO</option>
-                                        <option value="LIVIU CIORICI">LIVIU CIORICI</option>
-                                        <option value="MARIN CIORESCU">MARIN CIORESCU</option>
-                                        <option value="ATTILIO MASERATI">ATTILIO MASERATI</option>
-                                        <option value="POLLEDRI RICCARDO">POLLEDRI RICCARDO</option>
-                                        <option value="GAZZOLA MASSIMO">GAZZOLA MASSIMO</option>
-                                        <option value="BRAGHIERI STEFANO">BRAGHIERI STEFANO</option>
-                                        <option value="COROLI LORENZO">COROLI LORENZO</option>
-                                        <option value="CREMONESI NICOLA">CREMONESI NICOLA</option>
-                                        <option value="MARLIERI GIUSEPPE">MARLIERI GIUSEPPE</option>
-                                        <option value="MARZAROLI EMILIO">MARZAROLI EMILIO</option>
-                                        <option value="PICCOLI GIULIANO">PICCOLI GIULIANO</option>
-                                        <option value="IVAN ISOPESCU">IVAN ISOPESCU</option>
-                                        <option value="MAZZOCCHI MIRCO">MAZZOCCHI MIRCO</option>
-                                        <option value="MOIA LUIGI">MOIA LUIGI</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <button type="button" class="no-print" onclick="aggiungiRigaTecnico()" style="font-size:8px; margin-top:5px; border:1px solid #ccc; background:#fff; cursor:pointer;">+ AGGIUNGI TECNICO</button>
-                    </div>
-
-                    <div class="input-field">
-                        <label>Mezzo di Trasporto</label>
-                        <select name="mezzo_trasporto" class="save-data">
-                            <option value="MEZZO AZIENDALE">MEZZO AZIENDALE</option>
-                            <option value="MEZZO PROPRIO">MEZZO PROPRIO</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="border-left: 1px solid #eee; padding-left: 20px;">
-                    <div class="input-field" style="margin-bottom:12px;">
-                        <label>Cliente</label>
-                        <input type="text" id="cliente_input" name="cliente" class="save-data caps" style="font-size:14px; font-weight:bold;">
-                    </div>
-                    <div class="input-field" style="margin-bottom:12px;">
-                        <label>Sede Intervento</label>
-                        <input type="text" id="indirizzo_input" name="indirizzo" class="save-data caps">
-                    </div>
-                    
-                    <div style="display:flex; gap:10px;">
-                        <div class="input-field" style="flex:1;">
-                            <label>Macchina / Matr.</label>
-                            <input type="text" id="macchina_input" name="macchina" class="save-data caps">
-                        </div>
-                        <div class="input-field" style="flex:1;">
-                            <label>Email Cliente</label>
-                            <input type="email" id="email_input" name="email_cliente" class="save-data" placeholder="nome@email.it" style="text-transform:none;">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <table>
-            <thead>
-                <tr><th rowspan="2">DATA</th><th colspan="2">VIAGGIO (A)</th><th colspan="2">LAVORO (M)</th><th colspan="2">LAVORO (P)</th><th colspan="2">VIAGGIO (R)</th><th rowspan="2">P / C / H</th></tr>
-                <tr style="font-size:5px;"><th>DA</th><th>A</th><th>DA</th><th>A</th><th>DA</th><th>A</th><th>DA</th><th>A</th></tr>
-            </thead>
-            <tbody id="table-body"></tbody>
-        </table>
-
-        <div class="card" style="margin-top:10px;">
-            <label style="color:var(--tmc-blue); font-weight:bold;">PROBLEMA SEGNALATO</label>
-            <textarea id="descrizione_input" name="descrizione" class="save-data caps" rows="3"></textarea>
-        </div>
-
-        <table>
-            <thead><tr><th>CODICE</th><th>RICAMBIO</th><th style="width:10%">Q.TÀ</th><th style="width:15%">UNIT. €</th><th style="width:15%">TOT. €</th></tr></thead>
-            <tbody id="ricambi-body"></tbody>
-            <tfoot><tr><td colspan="4" style="text-align:right; font-weight:bold; padding-right:5px;">TOTALE MATERIALI:</td><td id="gran-totale" style="font-weight:bold; color:var(--tmc-blue);">0.00 €</td></tr></tfoot>
-        </table>
-
-        <div class="bottom-grid">
-            <div class="notes-box card" style="margin:0;">
-                <label>NOTE / RIEPILOGO SPESE</label>
-                <div style="font-size:7px;">PRESTAZIONE:<div class="dotted-line"></div></div>
-                <div style="font-size:7px;">VIAGGIO:<div class="dotted-line"></div></div>
-                <div style="font-size:7px;">TRASFERTA / ALTRO:<div class="dotted-line"></div><div class="dotted-line"></div></div>
-            </div>
-            <div class="sig-box">
-                <label style="color:var(--tmc-blue); font-weight:bold; font-size:8px;">FIRMA CLIENTE (TOCCA PER FIRMARE)</label>
-                <div id="firma-preview" class="sig-preview" onclick="openSignature()">
-                    <span id="placeholder-firma" style="color:#aaa; font-size:10px; text-align:center;">Firma a schermo intero</span>
-                    <img id="sig-image" src="" style="display:none;">
-                </div>
-            </div>
-        </div>
-
-        <img src="static/piede.jpg" class="footer-static">
     </div>
 
-    <div class="no-print">
-        <button class="btn btn-dark" onclick="addRow()">+ GIORNO</button>
-        <button class="btn btn-dark" onclick="addRicambio()">+ RICAMBIO</button>
-        <button class="btn btn-blue" onclick="window.print()">SALVA PDF</button>
-        <button class="btn btn-green" onclick="condividiWhatsApp()">WHATSAPP</button>
-        <button class="btn btn-orange" onclick="inviaEmailAutomaticamente()">INVIA EMAIL</button>
-        <button class="btn" style="background:red;" onclick="nuovoRapporto()">RESET</button>
+    <div id="app-content" style="display:none;">
+        <div class="page-a4" id="rapporto-foglio">
+            <img src="static/intestazione.jpg" class="banner-static">
+
+            <div class="main-title-container">
+                <span>RAPPORTO INTERVENTO N. <input type="text" id="n_rapporto_input" name="n_rapporto" class="save-data caps" placeholder="XXXX" style="width:140px; font-size:16px; font-weight:bold; color:var(--tmc-blue);"></span>
+                <div style="display:flex; gap:8px;">
+                    <div id="box-G" class="tipo-box" onclick="setTipo('G')">GRATUITO</div>
+                    <div id="box-P" class="tipo-box" onclick="setTipo('P')">PAGAMENTO</div>
+                    <input type="hidden" name="tipo_int" id="tipo_int_hidden" class="save-data" value="P">
+                </div>
+            </div>
+
+            <div class="card">
+                <button type="button" class="btn-sync no-print" onclick="importaDaCalendario()" title="Sincronizza">🔄</button>
+                
+                <div class="grid-header">
+                    <div>
+                        <div class="input-field" style="margin-bottom:10px;">
+                            <label>Tecnico/i Incaricato/i</label>
+                            <div id="lista-tecnici-inputs">
+                                <div class="tecnico-riga" style="display:flex; gap:5px; margin-top:5px;">
+                                    <div class="tecnico-combo" style="flex:1;">
+                                        <input type="text" name="tecnico_1" class="save-data tecnico-input-main caps" placeholder="Scrivi o seleziona...">
+                                        <select class="tecnico-select-bg" onchange="this.previousElementSibling.value=this.value; saveDraft();">
+                                            <option value=""></option>
+                                            <option value="CARINI MARCO">CARINI MARCO</option>
+                                            <option value="LIVIU CIORICI">LIVIU CIORICI</option>
+                                            <option value="MARIN CIORESCU">MARIN CIORESCU</option>
+                                            <option value="ATTILIO MASERATI">ATTILIO MASERATI</option>
+                                            <option value="POLLEDRI RICCARDO">POLLEDRI RICCARDO</option>
+                                            <option value="GAZZOLA MASSIMO">GAZZOLA MASSIMO</option>
+                                            <option value="BRAGHIERI STEFANO">BRAGHIERI STEFANO</option>
+                                            <option value="COROLI LORENZO">COROLI LORENZO</option>
+                                            <option value="CREMONESI NICOLA">CREMONESI NICOLA</option>
+                                            <option value="MARLIERI GIUSEPPE">MARLIERI GIUSEPPE</option>
+                                            <option value="MARZAROLI EMILIO">MARZAROLI EMILIO</option>
+                                            <option value="PICCOLI GIULIANO">PICCOLI GIULIANO</option>
+                                            <option value="IVAN ISOPESCU">IVAN ISOPESCU</option>
+                                            <option value="MAZZOCCHI MIRCO">MAZZOCCHI MIRCO</option>
+                                            <option value="MOIA LUIGI">MOIA LUIGI</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="no-print" onclick="aggiungiRigaTecnico()" style="font-size:8px; margin-top:5px; border:1px solid #ccc; background:#fff; cursor:pointer;">+ AGGIUNGI TECNICO</button>
+                        </div>
+
+                        <div class="input-field">
+                            <label>Mezzo di Trasporto</label>
+                            <select name="mezzo_trasporto" class="save-data">
+                                <option value="MEZZO AZIENDALE">MEZZO AZIENDALE</option>
+                                <option value="MEZZO PROPRIO">MEZZO PROPRIO</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="border-left: 1px solid #eee; padding-left: 20px;">
+                        <div class="input-field" style="margin-bottom:12px;">
+                            <label>Cliente</label>
+                            <input type="text" id="cliente_input" name="cliente" class="save-data caps" style="font-size:14px; font-weight:bold;">
+                        </div>
+                        <div class="input-field" style="margin-bottom:12px;">
+                            <label>Sede Intervento</label>
+                            <input type="text" id="indirizzo_input" name="indirizzo" class="save-data caps">
+                        </div>
+                        
+                        <div style="display:flex; gap:10px;">
+                            <div class="input-field" style="flex:1;">
+                                <label>Macchina / Matr.</label>
+                                <input type="text" id="macchina_input" name="macchina" class="save-data caps">
+                            </div>
+                            <div class="input-field" style="flex:1;">
+                                <label>Email Cliente</label>
+                                <input type="email" id="email_input" name="email_cliente" class="save-data" placeholder="nome@email.it" style="text-transform:none;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr><th rowspan="2">DATA</th><th colspan="2">VIAGGIO (A)</th><th colspan="2">LAVORO (M)</th><th colspan="2">LAVORO (P)</th><th colspan="2">VIAGGIO (R)</th><th rowspan="2">P / C / H</th></tr>
+                    <tr style="font-size:5px;"><th>DA</th><th>A</th><th>DA</th><th>A</th><th>DA</th><th>A</th><th>DA</th><th>A</th></tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+            </table>
+
+            <div class="card" style="margin-top:10px;">
+                <label style="color:var(--tmc-blue); font-weight:bold;">PROBLEMA SEGNALATO</label>
+                <textarea id="descrizione_input" name="descrizione" class="save-data caps" rows="3"></textarea>
+            </div>
+
+            <table>
+                <thead><tr><th>CODICE</th><th>RICAMBIO</th><th style="width:10%">Q.TÀ</th><th style="width:15%">UNIT. €</th><th style="width:15%">TOT. €</th></tr></thead>
+                <tbody id="ricambi-body"></tbody>
+                <tfoot><tr><td colspan="4" style="text-align:right; font-weight:bold; padding-right:5px;">TOTALE MATERIALI:</td><td id="gran-totale" style="font-weight:bold; color:var(--tmc-blue);">0.00 €</td></tr></tfoot>
+            </table>
+
+            <div class="bottom-grid">
+                <div class="notes-box card" style="margin:0;">
+                    <label>NOTE / RIEPILOGO SPESE</label>
+                    <div style="font-size:7px;">PRESTAZIONE:<div class="dotted-line"></div></div>
+                    <div style="font-size:7px;">VIAGGIO:<div class="dotted-line"></div></div>
+                    <div style="font-size:7px;">TRASFERTA / ALTRO:<div class="dotted-line"></div><div class="dotted-line"></div></div>
+                </div>
+                <div class="sig-box">
+                    <label style="color:var(--tmc-blue); font-weight:bold; font-size:8px;">FIRMA CLIENTE (TOCCA PER FIRMARE)</label>
+                    <div id="firma-preview" class="sig-preview" onclick="openSignature()">
+                        <span id="placeholder-firma" style="color:#aaa; font-size:10px; text-align:center;">Firma a schermo intero</span>
+                        <img id="sig-image" src="" style="display:none;">
+                    </div>
+                </div>
+            </div>
+
+            <img src="static/piede.jpg" class="footer-static">
+        </div>
+
+        <div class="no-print">
+            <button class="btn btn-dark" onclick="addRow()">+ GIORNO</button>
+            <button class="btn btn-dark" onclick="addRicambio()">+ RICAMBIO</button>
+            <button class="btn btn-blue" onclick="window.print()">SALVA PDF</button>
+            <button class="btn btn-green" onclick="condividiWhatsApp()">WHATSAPP</button>
+            <button class="btn btn-orange" onclick="inviaEmailAutomaticamente()">INVIA EMAIL</button>
+            <button class="btn" style="background:red;" onclick="nuovoRapporto()">RESET</button>
+            <button class="btn btn-dark" style="min-width: 100%; margin-top: 10px;" onclick="esciApp()">🔒 ESCI (LOCK)</button>
+        </div>
     </div>
 
     <div id="signature-overlay">
@@ -238,6 +269,34 @@
 
     <script>
         const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxh6R-LKwzIsbzNgTyf41AZTs3fxd_CqTE2bLQLQFcx7mwpb-ueqOARluwFPQFW47jM/exec";
+        
+        // --- LOGICA DI LOGIN ---
+        const PIN_SEGRETO = "TMC2026"; // <--- PUOI CAMBIARE LA PASSWORD QUI
+
+        function verificaLogin() {
+            const input = document.getElementById('pin_input').value.toUpperCase();
+            if(input === PIN_SEGRETO) {
+                localStorage.setItem('tmc_auth_token', 'ACCESSO_CONSENTITO');
+                sbloccaApp();
+            } else {
+                document.getElementById('login-error').style.display = 'block';
+            }
+        }
+
+        function esciApp() {
+            if(confirm("Vuoi bloccare l'App? Dovrai reinserire la password al prossimo avvio.")) {
+                localStorage.removeItem('tmc_auth_token');
+                location.reload();
+            }
+        }
+
+        function sbloccaApp() {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('app-content').style.display = 'block';
+            loadDraft(); // Carica i dati salvati solo dopo il login
+        }
+
+        // --- FINE LOGICA LOGIN ---
 
         let rowCount = 0; let ricCount = 0;
         const canvas = document.getElementById('canvas-fullscreen');
@@ -309,19 +368,12 @@
             } catch (e) { alert("Errore connessione."); }
         }
 
-        // --- FUNZIONI DI GENERAZIONE PDF AGGIORNATE ---
-
-        // Configurazioni comuni per forzare l'impaginazione Desktop
         function getPdfOptions(fileName) {
             return {
                 margin: 0, 
                 filename: fileName, 
                 image: { type: 'jpeg', quality: 0.98 }, 
-                html2canvas: { 
-                    scale: 2, 
-                    useCORS: true, 
-                    windowWidth: 1024 // TRUCCO: Forza la vista desktop!
-                }, 
+                html2canvas: { scale: 2, useCORS: true, windowWidth: 1024 }, 
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
         }
@@ -335,11 +387,9 @@
             const opt = getPdfOptions(fileName);
             alert("Generazione del PDF in corso... Attendi l'apertura del menu di condivisione.");
 
-            // Aggiungiamo la classe che blocca la larghezza prima di "fotografare"
             document.body.classList.add('pdf-mode');
 
             html2pdf().set(opt).from(element).output('blob').then(function(pdfBlob) {
-                // Rimuoviamo la classe al termine
                 document.body.classList.remove('pdf-mode');
                 
                 const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
@@ -366,12 +416,9 @@
             document.getElementById('loading-overlay').style.display = 'flex';
             
             const opt = getPdfOptions(fileName);
-
-            // Aggiungiamo la classe che blocca la larghezza prima di "fotografare"
             document.body.classList.add('pdf-mode');
 
             html2pdf().set(opt).from(element).outputPdf('datauristring').then(function(pdfBase64) {
-                // Rimuoviamo la classe al termine
                 document.body.classList.remove('pdf-mode');
 
                 const payload = {
@@ -402,8 +449,6 @@
                 });
             }).catch(err => document.body.classList.remove('pdf-mode'));
         }
-
-        // ----------------------------------------------
 
         function setTipo(val) {
             document.getElementById('tipo_int_hidden').value = val;
@@ -522,7 +567,23 @@
         function attachListeners() { document.querySelectorAll('.save-data').forEach(el => el.oninput = calc); }
         function nuovoRapporto() { if(confirm("Resettare tutto?")) { localStorage.clear(); location.reload(); } }
 
-        window.onload = loadDraft;
+        window.onload = function() {
+            // Controlla se l'utente ha già fatto il login in passato
+            if(localStorage.getItem('tmc_auth_token') === 'ACCESSO_CONSENTITO') {
+                sbloccaApp();
+            } else {
+                document.getElementById('login-overlay').style.display = 'flex';
+                document.getElementById('app-content').style.display = 'none';
+            }
+            
+            // Permetti login premendo "Invio" sulla tastiera
+            document.getElementById('pin_input').addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    verificaLogin();
+                }
+            });
+        };
     </script>
 </body>
 </html>

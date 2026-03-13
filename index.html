@@ -15,9 +15,19 @@
             display: flex; flex-direction: column; position: relative;
         }
 
+        /* Responsive per i telefoni */
         @media screen and (max-width: 210mm) {
             body { background: white; }
             .page-a4 { width: 100%; margin: 0; padding: 10px; box-shadow: none; }
+        }
+
+        /* FORZATURA A4 PER PDF DA MOBILE: ignora lo schermo piccolo e impagina come su PC */
+        body.pdf-mode .page-a4 {
+            width: 210mm !important;
+            max-width: 210mm !important;
+            min-height: 297mm !important;
+            padding: 10mm !important;
+            margin: 0 !important;
         }
 
         .banner-static { width: 100%; display: block; }
@@ -62,8 +72,8 @@
         .no-print { display: flex; flex-wrap: wrap; gap: 10px; padding: 15px; max-width: 210mm; margin: 0 auto; justify-content: center; }
         .btn { flex: 1; min-width: 90px; padding: 12px 5px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; font-size: 11px; text-align: center; }
         .btn-blue { background: var(--tmc-blue); }
-        .btn-green { background: #25D366; } /* WhatsApp Green */
-        .btn-orange { background: #ff9800; } /* Email Orange */
+        .btn-green { background: #25D366; } 
+        .btn-orange { background: #ff9800; } 
         .btn-dark { background: #444; }
         .btn-sync { position: absolute; right: 10px; top: 10px; font-size: 20px; background: none; border: none; cursor: pointer; z-index: 10; }
 
@@ -75,7 +85,6 @@
             .no-print, .btn-sync { display: none !important; } 
         }
         
-        /* Loading Overlay per invio mail */
         #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; color: white; flex-direction: column; justify-content: center; align-items: center; font-family: sans-serif; font-weight: bold; }
         .spinner { border: 6px solid #f3f3f3; border-top: 6px solid var(--tmc-blue); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -228,7 +237,6 @@
     </div>
 
     <script>
-        // LA TUA URL GOOGLE APPS SCRIPT
         const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxh6R-LKwzIsbzNgTyf41AZTs3fxd_CqTE2bLQLQFcx7mwpb-ueqOARluwFPQFW47jM/exec";
 
         let rowCount = 0; let ricCount = 0;
@@ -301,16 +309,39 @@
             } catch (e) { alert("Errore connessione."); }
         }
 
+        // --- FUNZIONI DI GENERAZIONE PDF AGGIORNATE ---
+
+        // Configurazioni comuni per forzare l'impaginazione Desktop
+        function getPdfOptions(fileName) {
+            return {
+                margin: 0, 
+                filename: fileName, 
+                image: { type: 'jpeg', quality: 0.98 }, 
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true, 
+                    windowWidth: 1024 // TRUCCO: Forza la vista desktop!
+                }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+        }
+
         function condividiWhatsApp() {
             const element = document.getElementById('rapporto-foglio');
             const nRapp = document.getElementById('n_rapporto_input').value || 'Nuovo';
             const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
             const fileName = `Rapporto_${nRapp}_${nomeCliente}.pdf`.replace(/ /g, "_");
 
-            const opt = { margin: 0, filename: fileName, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+            const opt = getPdfOptions(fileName);
             alert("Generazione del PDF in corso... Attendi l'apertura del menu di condivisione.");
 
+            // Aggiungiamo la classe che blocca la larghezza prima di "fotografare"
+            document.body.classList.add('pdf-mode');
+
             html2pdf().set(opt).from(element).output('blob').then(function(pdfBlob) {
+                // Rimuoviamo la classe al termine
+                document.body.classList.remove('pdf-mode');
+                
                 const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     navigator.share({ title: 'Rapporto di Intervento', text: 'In allegato il rapporto di intervento.', files: [file] });
@@ -318,10 +349,9 @@
                     html2pdf().set(opt).from(element).save();
                     alert("Il tuo dispositivo non supporta l'invio diretto. Il PDF è stato scaricato.");
                 }
-            });
+            }).catch(err => document.body.classList.remove('pdf-mode'));
         }
 
-        // NUOVA FUNZIONE: Invia Email via Google Apps Script
         function inviaEmailAutomaticamente() {
             const emailCliente = document.getElementById('email_input').value;
             const element = document.getElementById('rapporto-foglio');
@@ -329,16 +359,21 @@
             const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
             const fileName = `Rapporto_${nRapp}_${nomeCliente}.pdf`.replace(/ /g, "_");
 
-            // Verifica che ci sia almeno una traccia di aver compilato il rapporto
             if (!nRapp || nRapp === "Nuovo") {
                 if(!confirm("Sicuro di voler inviare il modulo senza aver compilato il N. Rapporto?")) return;
             }
 
             document.getElementById('loading-overlay').style.display = 'flex';
+            
+            const opt = getPdfOptions(fileName);
 
-            const opt = { margin: 0, filename: fileName, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
+            // Aggiungiamo la classe che blocca la larghezza prima di "fotografare"
+            document.body.classList.add('pdf-mode');
 
             html2pdf().set(opt).from(element).outputPdf('datauristring').then(function(pdfBase64) {
+                // Rimuoviamo la classe al termine
+                document.body.classList.remove('pdf-mode');
+
                 const payload = {
                     pdfBase64: pdfBase64,
                     filename: fileName,
@@ -347,7 +382,6 @@
                     emailCliente: emailCliente
                 };
                 
-                // L'uso di text/plain evita i blocchi di sicurezza CORS del browser
                 fetch(APP_SCRIPT_URL, {
                     method: "POST",
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -366,8 +400,10 @@
                     document.getElementById('loading-overlay').style.display = 'none';
                     alert("Errore di rete durante l'invio.");
                 });
-            });
+            }).catch(err => document.body.classList.remove('pdf-mode'));
         }
+
+        // ----------------------------------------------
 
         function setTipo(val) {
             document.getElementById('tipo_int_hidden').value = val;

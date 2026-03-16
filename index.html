@@ -20,7 +20,6 @@
             .page-a4 { width: 100%; margin: 0; padding: 10px; box-shadow: none; }
         }
 
-        /* TRUCCO PDF: Quando scatta la foto, blocca le dimensioni fisse su A4 */
         body.pdf-mode { background: white !important; }
         body.pdf-mode .page-a4 {
             width: 210mm !important;
@@ -90,7 +89,7 @@
             .no-print, .btn-sync { display: none !important; } 
         }
         
-        #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; color: white; flex-direction: column; justify-content: center; align-items: center; font-family: sans-serif; font-weight: bold; }
+        #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; color: white; flex-direction: column; justify-content: center; align-items: center; font-family: sans-serif; font-weight: bold; text-align: center; padding: 20px;}
         .spinner { border: 6px solid #f3f3f3; border-top: 6px solid var(--tmc-blue); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
@@ -119,9 +118,9 @@
         <div class="login-box">
             <img src="static/intestazione.jpg" style="width: 100%; margin-bottom: 10px;">
             <h3 style="color:var(--tmc-blue); margin-bottom: 5px;">Accesso Riservato</h3>
-            <p style="font-size: 12px; color: #666; margin-top: 0;">Inserisci la password per continuare</p>
+            <p style="font-size: 12px; color: #666; margin-top: 0;">Inserisci la password aziendale</p>
             <input type="password" id="pin_input" placeholder="Password">
-            <button onclick="verificaLogin()">ACCEDI</button>
+            <button id="btn-login" onclick="verificaLogin()">ACCEDI</button>
             <p id="login-error" style="color:red; font-size:13px; display:none; margin-top:15px; font-weight:bold;">Password errata. Riprova.</p>
         </div>
     </div>
@@ -261,7 +260,7 @@
             <button class="btn btn-green" onclick="condividiWhatsApp()">WHATSAPP</button>
             <button class="btn btn-orange" onclick="inviaEmailAutomaticamente()">INVIA EMAIL</button>
             <button class="btn" style="background:red;" onclick="nuovoRapporto()">RESET</button>
-            <button class="btn btn-dark" style="min-width: 100%; margin-top: 10px;" onclick="esciApp()">🔒 ESCI (LOCK)</button>
+            <button class="btn btn-dark" style="min-width: 100%; margin-top: 10px;" onclick="esciApp()">🔒 ESCI E RIMUOVI AUTORIZZAZIONE</button>
         </div>
     </div>
 
@@ -279,27 +278,51 @@
     
     <div id="loading-overlay">
         <div class="spinner"></div>
-        <div>Generazione e Invio... Attendere</div>
+        <div id="loading-text">Attendere...</div>
     </div>
 
     <script>
         const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxh6R-LKwzIsbzNgTyf41AZTs3fxd_CqTE2bLQLQFcx7mwpb-ueqOARluwFPQFW47jM/exec";
         
-        // --- LOGICA DI LOGIN ---
-        const PIN_SEGRETO = "TMC2026";
+        // --- LOGICA DI LOGIN BLINDATA SERVER-SIDE ---
+        async function verificaLogin() {
+            const input = document.getElementById('pin_input').value.toUpperCase().trim();
+            const btn = document.getElementById('btn-login');
+            if(!input) return;
 
-        function verificaLogin() {
-            const input = document.getElementById('pin_input').value.toUpperCase();
-            if(input === PIN_SEGRETO) {
-                localStorage.setItem('tmc_auth_token', 'ACCESSO_CONSENTITO');
-                sbloccaApp();
-            } else {
-                document.getElementById('login-error').style.display = 'block';
+            btn.innerText = "VERIFICA IN CORSO...";
+            document.getElementById('login-error').style.display = 'none';
+
+            try {
+                // Chiede a Google se la password è giusta
+                const response = await fetch(`${APP_SCRIPT_URL}?action=check_pin&pin=${encodeURIComponent(input)}`);
+                const data = await response.json();
+                
+                if(data.success) {
+                    // Salva il PIN reale in memoria locale per usarlo come "Pass" per le prossime azioni
+                    localStorage.setItem('tmc_auth_token', input);
+                    sbloccaApp();
+                } else {
+                    document.getElementById('login-error').style.display = 'block';
+                }
+            } catch(e) {
+                alert("Errore di connessione. Riprova.");
+            } finally {
+                btn.innerText = "ACCEDI";
             }
         }
 
-        function esciApp() {
-            if(confirm("Vuoi bloccare l'App? Dovrai reinserire la password al prossimo avvio.")) {
+        function gestisciErroreServer(data) {
+            if (data.error === "Non autorizzato" || data.error && data.error.includes("Accesso Negato")) {
+                alert("⚠️ Accesso Negato. Il PIN inserito è errato o è stato modificato dall'amministrazione.");
+                esciApp(false);
+                return true;
+            }
+            return false;
+        }
+
+        function esciApp(chiediConferma = true) {
+            if(!chiediConferma || confirm("Vuoi rimuovere l'autorizzazione? Dovrai reinserire la password al prossimo avvio.")) {
                 localStorage.removeItem('tmc_auth_token');
                 location.reload();
             }
@@ -367,7 +390,6 @@
             }
         }
 
-        // --- NUOVO: CONTROLLO FIRMA OBBLIGATORIA ---
         function controllaFirma() {
             const signatureData = localStorage.getItem('tmc_sig');
             if (!signatureData) {
@@ -381,10 +403,18 @@
             const t1 = document.getElementsByName('tecnico_1')[0].value;
             if (!t1) return alert("Inserisci un tecnico nel primo campo!");
             
+            document.getElementById('loading-overlay').style.display = 'flex';
+            document.getElementById('loading-text').innerText = "Sincronizzazione in corso...";
+
             try {
-                const response = await fetch(`${APP_SCRIPT_URL}?tecnico=${encodeURIComponent(t1)}`);
+                const currentPin = localStorage.getItem('tmc_auth_token');
+                const response = await fetch(`${APP_SCRIPT_URL}?tecnico=${encodeURIComponent(t1)}&pin=${encodeURIComponent(currentPin)}`);
                 const data = await response.json();
                 
+                document.getElementById('loading-overlay').style.display = 'none';
+
+                if (gestisciErroreServer(data)) return;
+
                 if (data.cliente !== undefined) {
                     document.getElementById('n_rapporto_input').value = data.tck || "";
                     document.getElementById('macchina_input').value = (data.matricola || "").toUpperCase();
@@ -405,8 +435,11 @@
                     document.getElementById('id_univoco_input').value = ""; 
                     generaIdUnivoco();
                     saveDraft();
-                } else { alert("Nessun evento trovato oggi."); }
-            } catch (e) { alert("Errore connessione."); }
+                } else { alert("Nessun evento trovato oggi per questo tecnico."); }
+            } catch (e) { 
+                document.getElementById('loading-overlay').style.display = 'none';
+                alert("Errore connessione."); 
+            }
         }
 
         function preparaSchermoPerPDF() {
@@ -440,7 +473,7 @@
         }
 
         function condividiWhatsApp() {
-            if (!controllaFirma()) return; // <-- BLOCCA SE MANCA LA FIRMA
+            if (!controllaFirma()) return;
 
             generaIdUnivoco();
             const element = document.getElementById('rapporto-foglio');
@@ -467,7 +500,7 @@
         }
 
         function inviaEmailAutomaticamente() {
-            if (!controllaFirma()) return; // <-- BLOCCA SE MANCA LA FIRMA
+            if (!controllaFirma()) return; 
 
             generaIdUnivoco();
             const emailCliente = document.getElementById('email_input').value;
@@ -477,12 +510,22 @@
             const fileName = `Rapporto_${idUnivoco}_${nomeCliente}.pdf`.replace(/ /g, "_");
 
             document.getElementById('loading-overlay').style.display = 'flex';
+            document.getElementById('loading-text').innerText = "Generazione e Invio... Attendere";
             preparaSchermoPerPDF();
 
             setTimeout(() => {
                 html2pdf().set(getPdfOptions(fileName)).from(element).outputPdf('datauristring').then(function(pdfBase64) {
                     ripristinaSchermo();
-                    const payload = { pdfBase64: pdfBase64, filename: fileName, ticket: idUnivoco, nomeCliente: nomeCliente, emailCliente: emailCliente };
+                    
+                    const currentPin = localStorage.getItem('tmc_auth_token');
+                    const payload = { 
+                        pdfBase64: pdfBase64, 
+                        filename: fileName, 
+                        ticket: idUnivoco, 
+                        nomeCliente: nomeCliente, 
+                        emailCliente: emailCliente,
+                        pin: currentPin // Invio il PIN al server per l'autorizzazione
+                    };
                     
                     fetch(APP_SCRIPT_URL, {
                         method: "POST",
@@ -492,6 +535,9 @@
                     .then(response => response.json())
                     .then(data => {
                         document.getElementById('loading-overlay').style.display = 'none';
+                        
+                        if (gestisciErroreServer(data)) return;
+
                         if(data.success) {
                             alert("Email inviata con successo in sede " + (emailCliente ? "e al cliente!" : "(nessuna email cliente inserita)."));
                         } else {
@@ -627,7 +673,11 @@
         function nuovoRapporto() { if(confirm("Resettare tutto?")) { localStorage.clear(); location.reload(); } }
 
         window.onload = function() {
-            if(localStorage.getItem('tmc_auth_token') === 'ACCESSO_CONSENTITO') {
+            // Controlla se c'è un PIN salvato in memoria
+            const savedPin = localStorage.getItem('tmc_auth_token');
+            if(savedPin && savedPin !== "") {
+                // Non fa la verifica al server qui per non rallentare l'avvio, 
+                // se il PIN è sbagliato lo bloccherà al primo tentativo di sync o invio email
                 sbloccaApp();
             } else {
                 document.getElementById('login-overlay').style.display = 'flex';

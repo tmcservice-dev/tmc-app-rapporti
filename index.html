@@ -11,7 +11,6 @@
         body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background: #525659; color: var(--tmc-dark); }
         .page-a4 { 
             background: white; width: 210mm; min-height: 297mm; margin: 10px auto; 
-            /* MARGINI RIDOTTI QUI: 4mm sopra/sotto, 8mm lati */
             padding: 4mm 8mm; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.5);
             display: flex; flex-direction: column; position: relative;
         }
@@ -29,7 +28,6 @@
             max-width: none !important;
             min-height: auto !important;
             margin: 0 !important;
-            /* MARGINI RIDOTTI ANCHE PER IL PDF */
             padding: 4mm 8mm !important;
             box-shadow: none !important;
             border: none !important;
@@ -106,13 +104,13 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* Stili Login e Modali */
-        .overlay-bg { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #525659; z-index: 99999; flex-direction: column; justify-content: center; align-items: center; }
+        .overlay-bg { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(82, 86, 89, 0.95); z-index: 99999; flex-direction: column; justify-content: center; align-items: center; }
         .modal-box { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: center; color: var(--tmc-dark); width: 80%; max-width: 350px; }
         .modal-box input { border: 2px solid var(--tmc-blue); padding: 12px; margin: 20px 0; width: calc(100% - 24px); font-size: 18px; text-align: center; border-radius: 5px; outline: none; }
         .modal-box button { background: var(--tmc-blue); color: white; border: none; padding: 15px; font-size: 16px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; }
         
         /* Modale Bozze */
-        #drafts-overlay { background: rgba(0,0,0,0.8); z-index: 99998; }
+        #drafts-overlay { z-index: 99998; }
         .draft-item { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding:12px 0; text-align:left; }
     </style>
 </head>
@@ -139,6 +137,19 @@
             <div id="lista-bozze" style="margin-bottom: 15px;"></div>
             
             <button onclick="chiudiBozze()" style="background:#444;">CHIUDI ARCHIVIO</button>
+        </div>
+    </div>
+
+    <div id="text-editor-overlay" class="overlay-bg" style="display:none; padding: 20px; box-sizing: border-box; z-index: 99999;">
+        <div style="background:white; width:100%; max-width: 600px; height:80%; border-radius:8px; display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+            <div style="padding:15px; background:var(--tmc-blue); color:white; text-align:center;">
+                <b style="font-size:16px;">PROBLEMA SEGNALATO / LAVORO ESEGUITO</b>
+            </div>
+            <textarea id="editor_fullscreen" class="caps" style="flex:1; width:100%; border:none; padding:15px; font-size:16px; outline:none; resize:none; box-sizing:border-box;" placeholder="Scrivi qui tutti i dettagli..."></textarea>
+            <div style="padding:15px; display:flex; gap:10px; background:#f9f9f9; border-top:1px solid #ddd;">
+                <button onclick="chiudiEditorTesto(false)" style="flex:1; padding:15px; background:#eee; color:#333; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">ANNULLA</button>
+                <button onclick="chiudiEditorTesto(true)" style="flex:1; padding:15px; background:#25D366; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">CONFERMA E SALVA</button>
+            </div>
         </div>
     </div>
 
@@ -240,8 +251,11 @@
             </table>
 
             <div class="card" style="margin-top:10px;">
-                <label style="color:var(--tmc-blue); font-weight:bold;">PROBLEMA SEGNALATO</label>
-                <textarea id="descrizione_input" name="descrizione" class="save-data caps" rows="3"></textarea>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <label style="color:var(--tmc-blue); font-weight:bold; margin:0;">PROBLEMA SEGNALATO / LAVORO ESEGUITO</label>
+                    <button type="button" class="no-print" onclick="apriEditorTesto()" style="background:var(--tmc-light-blue); color:var(--tmc-blue); border:1px solid var(--tmc-blue); border-radius:3px; font-size:9px; padding:3px 8px; font-weight:bold; cursor:pointer;">⛶ ESPANDI</button>
+                </div>
+                <textarea id="descrizione_input" name="descrizione" class="save-data caps" rows="3" style="margin-top:5px;"></textarea>
                 <div id="descrizione_print" class="caps" style="display:none; white-space: pre-wrap; word-break: break-word; font-size: 12px; min-height: 45px; border-bottom: 1px solid #cce0f5; padding: 4px 0;"></div>
             </div>
 
@@ -354,6 +368,7 @@
             loadDraft(); 
         }
 
+        // --- GESTIONE BOZZE ---
         function apriBozze() {
             aggiornaListaBozze();
             document.getElementById('drafts-overlay').style.display = 'flex';
@@ -440,6 +455,25 @@
             archivio = archivio.filter(b => b.id !== id);
             localStorage.setItem('tmc_archivio_bozze', JSON.stringify(archivio));
             aggiornaListaBozze();
+        }
+
+        // --- NUOVO: GESTIONE EDITOR DI TESTO INGRANDITO ---
+        function apriEditorTesto() {
+            const textInput = document.getElementById('descrizione_input');
+            const textEditor = document.getElementById('editor_fullscreen');
+            textEditor.value = textInput.value;
+            document.getElementById('text-editor-overlay').style.display = 'flex';
+            setTimeout(() => textEditor.focus(), 100); // Focus per aprire la tastiera
+        }
+
+        function chiudiEditorTesto(salva) {
+            if(salva) {
+                const textInput = document.getElementById('descrizione_input');
+                const textEditor = document.getElementById('editor_fullscreen');
+                textInput.value = textEditor.value;
+                saveDraft(); // Salva in automatico
+            }
+            document.getElementById('text-editor-overlay').style.display = 'none';
         }
 
         let rowCount = 0; let ricCount = 0;

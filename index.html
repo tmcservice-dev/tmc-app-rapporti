@@ -11,7 +11,6 @@
         body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background: #525659; color: var(--tmc-dark); }
         .page-a4 { 
             background: white; width: 210mm; min-height: 297mm; margin: 10px auto; 
-            /* MARGINI RIDOTTI AL MINIMO: 2mm sopra/sotto, 8mm lati */
             padding: 2mm 8mm; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.5);
             display: flex; flex-direction: column; position: relative;
         }
@@ -21,7 +20,6 @@
             .page-a4 { width: 100%; margin: 0; padding: 10px; box-shadow: none; }
         }
 
-        /* TRUCCO PDF: Quando scatta la foto, blocca le dimensioni fisse su A4 */
         body.pdf-mode { background: white !important; }
         body.pdf-mode .page-a4 {
             width: 210mm !important;
@@ -29,7 +27,6 @@
             max-width: none !important;
             min-height: auto !important;
             margin: 0 !important;
-            /* MARGINI PDF RIDOTTI */
             padding: 2mm 8mm !important;
             box-shadow: none !important;
             border: none !important;
@@ -40,7 +37,6 @@
 
         .banner-static { width: 100%; display: block; }
         
-        /* SPazi interni ridotti per recuperare spazio verticale */
         .main-title-container { 
             display: flex; justify-content: space-between; align-items: center; 
             color: var(--tmc-blue); font-weight: bold; border-top: 2px solid var(--tmc-blue); 
@@ -280,7 +276,10 @@
                         VIAGGIO: <span id="tot_viaggio_span" style="color:var(--tmc-blue); font-weight:bold; font-size:8px;"></span>
                         <div class="dotted-line"></div>
                     </div>
-                    <div style="font-size:7px;">TRASFERTA / ALTRO:<div class="dotted-line"></div><div class="dotted-line"></div></div>
+                    <div style="font-size:7px;">
+                        TRASFERTA / ALTRO: <span id="tot_pch_span" style="color:var(--tmc-blue); font-weight:bold; font-size:8px;"></span>
+                        <div class="dotted-line"></div><div class="dotted-line"></div>
+                    </div>
                 </div>
                 
                 <div class="sig-box" style="display:flex; flex-direction:column; justify-content:flex-end;">
@@ -779,6 +778,8 @@
             };
 
             let totLavoro = 0; let totViaggio = 0;
+            let totP = 0, totC = 0, totH = 0; // Contatori per Pranzo, Cena, Hotel
+
             for(let i=1; i<=rowCount; i++) {
                 let va1 = document.getElementsByName(`va1_${i}`)[0]?.value;
                 let va2 = document.getElementsByName(`va2_${i}`)[0]?.value;
@@ -791,6 +792,11 @@
 
                 totViaggio += getDiff(va1, va2) + getDiff(vr1, vr2);
                 totLavoro += getDiff(lm1, lm2) + getDiff(lp1, lp2);
+
+                // Conta P, C, H
+                if (document.getElementsByName(`p_${i}`)[0]?.checked) totP++;
+                if (document.getElementsByName(`c_${i}`)[0]?.checked) totC++;
+                if (document.getElementsByName(`h_${i}`)[0]?.checked) totH++;
             }
 
             const formatOre = (mins) => {
@@ -804,6 +810,17 @@
             const spanVia = document.getElementById('tot_viaggio_span');
             if(spanLav) spanLav.innerText = formatOre(totLavoro);
             if(spanVia) spanVia.innerText = formatOre(totViaggio);
+
+            // Stampa PCH
+            let pchText = [];
+            if (totP > 0) pchText.push(`${totP} Pranzi`);
+            if (totC > 0) pchText.push(`${totC} Cene`);
+            if (totH > 0) pchText.push(`${totH} Hotel`);
+            
+            const spanPCH = document.getElementById('tot_pch_span');
+            if (spanPCH) {
+                spanPCH.innerText = pchText.length > 0 ? ` [TOTALE: ${pchText.join(' - ')}]` : "";
+            }
 
             saveDraft();
         }

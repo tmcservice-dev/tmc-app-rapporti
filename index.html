@@ -11,7 +11,8 @@
         body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background: #525659; color: var(--tmc-dark); }
         .page-a4 { 
             background: white; width: 210mm; min-height: 297mm; margin: 10px auto; 
-            padding: 10mm; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            /* MARGINI RIDOTTI QUI: 4mm sopra/sotto, 8mm lati */
+            padding: 4mm 8mm; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.5);
             display: flex; flex-direction: column; position: relative;
         }
 
@@ -28,7 +29,8 @@
             max-width: none !important;
             min-height: auto !important;
             margin: 0 !important;
-            padding: 10mm !important;
+            /* MARGINI RIDOTTI ANCHE PER IL PDF */
+            padding: 4mm 8mm !important;
             box-shadow: none !important;
             border: none !important;
             transform: none !important;
@@ -40,13 +42,13 @@
         .main-title-container { 
             display: flex; justify-content: space-between; align-items: center; 
             color: var(--tmc-blue); font-weight: bold; border-top: 2px solid var(--tmc-blue); 
-            border-bottom: 2px solid var(--tmc-blue); padding: 8px; margin: 10px 0; 
+            border-bottom: 2px solid var(--tmc-blue); padding: 6px; margin: 8px 0; 
         }
 
         .tipo-box { border: 2px solid var(--tmc-blue); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; }
         .tipo-box.active { background: var(--tmc-blue); color: white; }
 
-        .card { border: 1px solid var(--tmc-blue); padding: 10px; margin-bottom: 10px; border-radius: 5px; position: relative; }
+        .card { border: 1px solid var(--tmc-blue); padding: 8px 10px; margin-bottom: 8px; border-radius: 5px; position: relative; }
         .grid-header { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; }
         
         .input-field label { font-size: 8px; font-weight: bold; color: var(--tmc-blue); display: block; text-transform: uppercase; margin-bottom: 2px; }
@@ -62,17 +64,17 @@
         th { background: var(--tmc-light-blue); font-size: 7px; border: 1px solid var(--tmc-blue); padding: 5px 2px; color: var(--tmc-blue); }
         td { border: 1px solid var(--tmc-blue); padding: 3px 1px; text-align: center; }
         
-        /* FIX ORARI LEGGIBILI */
+        /* FIX ORARI E NUOVA COLONNA */
         .time-select { 
             font-size: 12px; font-weight: bold; color: var(--tmc-blue); background: #fff; border: 1px solid #ddd; 
-            width: 58px; height: 26px; border-radius: 3px; 
+            width: 48px; height: 26px; border-radius: 3px; 
             text-align: center; 
-            appearance: none; /* Rimuove la freccia standard su PC */
-            -webkit-appearance: none; /* Rimuove la freccia gigante su iPhone/Safari */
+            appearance: none; 
+            -webkit-appearance: none; 
             padding: 0; 
         }
 
-        .pch-row { display: flex; justify-content: center; gap: 5px; font-size: 9px; font-weight: bold; align-items: center; }
+        .pch-row { display: flex; justify-content: center; gap: 3px; font-size: 9px; font-weight: bold; align-items: center; }
         .pch-row input { width: auto; margin: 0; }
 
         .bottom-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; margin-top: auto; padding-top: 10px; }
@@ -84,7 +86,7 @@
         #signature-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index: 9999; flex-direction: column; }
         #canvas-fullscreen { flex-grow: 1; border: 3px solid var(--tmc-blue); margin: 15px; background: #fafafa; touch-action: none; }
 
-        .footer-static { width: 66%; display: block; margin: 10px auto; }
+        .footer-static { width: 66%; display: block; margin: 8px auto; }
         .no-print { display: flex; flex-wrap: wrap; gap: 10px; padding: 15px; max-width: 210mm; margin: 0 auto; justify-content: center; }
         .btn { flex: 1; min-width: 90px; padding: 12px 5px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; font-size: 11px; text-align: center; }
         .btn-blue { background: var(--tmc-blue); }
@@ -226,7 +228,12 @@
 
             <table>
                 <thead>
-                    <tr><th rowspan="2">DATA</th><th colspan="2">VIAGGIO (A)</th><th colspan="2">LAVORO (M)</th><th colspan="2">LAVORO (P)</th><th colspan="2">VIAGGIO (R)</th><th rowspan="2">P / C / H</th></tr>
+                    <tr>
+                        <th rowspan="2" style="width: 14%;">DATA</th>
+                        <th rowspan="2" style="width: 10%;">TECNICO</th>
+                        <th colspan="2">VIAGGIO (A)</th><th colspan="2">LAVORO (M)</th><th colspan="2">LAVORO (P)</th><th colspan="2">VIAGGIO (R)</th>
+                        <th rowspan="2" style="width: 8%;">P / C / H</th>
+                    </tr>
                     <tr style="font-size:5px;"><th>DA</th><th>A</th><th>DA</th><th>A</th><th>DA</th><th>A</th><th>DA</th><th>A</th></tr>
                 </thead>
                 <tbody id="table-body"></tbody>
@@ -269,7 +276,7 @@
         </div>
 
         <div class="no-print">
-            <button class="btn btn-dark" onclick="addRow()">+ GIORNO</button>
+            <button class="btn btn-dark" onclick="addRow()">+ GIORNO/TECNICO</button>
             <button class="btn btn-dark" onclick="addRicambio()">+ RICAMBIO</button>
             <button class="btn btn-orange" style="background:#ff9800; min-width:100%;" onclick="apriBozze()">📂 ARCHIVIO BOZZE</button>
             <button class="btn btn-blue" onclick="window.print()">SALVA PDF</button>
@@ -673,10 +680,11 @@
         }
 
         function addRow() {
-            if (rowCount >= 6) return;
+            if (rowCount >= 8) return;
             rowCount++; const opt = getTimeOptions();
             const tr = document.createElement('tr');
             tr.innerHTML = `<td><input type="date" class="save-data" name="d_${rowCount}" style="font-size:9px;"></td>
+                <td><input type="text" class="save-data caps" name="tec_${rowCount}" placeholder="Nome" style="font-size:8px; text-align:center; width:100%;"></td>
                 <td><select class="save-data time-select" name="va1_${rowCount}">${opt}</select></td><td><select class="save-data time-select" name="va2_${rowCount}">${opt}</select></td>
                 <td><select class="save-data time-select" name="lm1_${rowCount}">${opt}</select></td><td><select class="save-data time-select" name="lm2_${rowCount}">${opt}</select></td>
                 <td><select class="save-data time-select" name="lp1_${rowCount}">${opt}</select></td><td><select class="save-data time-select" name="lp2_${rowCount}">${opt}</select></td>

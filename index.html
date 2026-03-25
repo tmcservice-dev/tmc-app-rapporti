@@ -377,7 +377,6 @@
             loadDraft(); 
         }
 
-        // --- GESTIONE BOZZE ---
         function apriBozze() {
             aggiornaListaBozze();
             document.getElementById('drafts-overlay').style.display = 'flex';
@@ -694,7 +693,7 @@
                         nomeCliente: nomeCliente, 
                         emailCliente: emailCliente,
                         pin: currentPin,
-                        updateCalendario: datiCalendario // <-- Invia il testo da accodare
+                        updateCalendario: datiCalendario 
                     };
                     
                     fetch(APP_SCRIPT_URL, {
@@ -766,6 +765,22 @@
                 <td><input type="number" class="save-data qta" name="rq_${ricCount}" oninput="calc()"></td><td><input type="number" class="save-data unit" name="ru_${ricCount}" step="0.01" oninput="calc()"></td>
                 <td><input type="text" id="rt_${ricCount}" readonly style="background:#f9f9f9;"></td>`;
             document.getElementById('ricambi-body').appendChild(tr); attachListeners();
+        }
+
+        // --- NUOVO: AUTO-COMPILAZIONE ORARI A CASCATA ---
+        function autoFillNextTime(el) {
+            const row = el.closest('tr');
+            if(!row) return;
+            const selects = Array.from(row.querySelectorAll('.time-select'));
+            const idx = selects.indexOf(el);
+            
+            // Se c'è una casella successiva e la casella successiva è vuota, la pre-compila
+            if (idx !== -1 && idx < selects.length - 1) {
+                const nextSel = selects[idx + 1];
+                if (nextSel && !nextSel.value) {
+                    nextSel.value = el.value;
+                }
+            }
         }
 
         function calc() {
@@ -907,7 +922,18 @@
             calc();
         }
         
-        function attachListeners() { document.querySelectorAll('.save-data').forEach(el => el.oninput = calc); }
+        function attachListeners() { 
+            document.querySelectorAll('.save-data').forEach(el => {
+                el.oninput = calc;
+                if(el.classList.contains('time-select')) {
+                    el.addEventListener('change', function() {
+                        autoFillNextTime(this);
+                        calc();
+                    });
+                }
+            }); 
+        }
+
         function nuovoRapporto() { if(confirm("Cancellare tutti i dati a schermo e iniziare un modulo vuoto?")) { localStorage.removeItem('tmc_bozza'); localStorage.removeItem('tmc_counts'); localStorage.removeItem('tmc_sig'); location.reload(); } }
 
         window.onload = function() {

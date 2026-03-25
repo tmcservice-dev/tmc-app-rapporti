@@ -659,7 +659,7 @@
             const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
             const fileName = `Rapporto_${idUnivoco}_${nomeCliente}.pdf`.replace(/ /g, "_");
 
-            // --- RACCOLTA DATI PER IL CALENDARIO ---
+            // --- RACCOLTA DATI PER IL CALENDARIO SENZA EMOJI ---
             let matString = "";
             for(let i=1; i<=ricCount; i++) {
                 let c = document.getElementsByName(`rc_${i}`)[0]?.value;
@@ -670,11 +670,11 @@
             let v_ore = document.getElementById('tot_viaggio_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';
             let pch_val = document.getElementById('tot_pch_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';
 
-            let datiCalendario = `\n✅ RAPPORTO INVIATO (${idUnivoco})\n`;
-            if(l_ore) datiCalendario += `⏱ Lavoro: ${l_ore}\n`;
-            if(v_ore) datiCalendario += `🚗 Viaggio: ${v_ore}\n`;
-            if(pch_val) datiCalendario += `🏨 Trasferta: ${pch_val}\n`;
-            if(matString) datiCalendario += `🔧 Materiale:\n${matString}`;
+            let datiCalendario = `\n--- RAPPORTO INVIATO (${idUnivoco}) ---\n`;
+            if(l_ore) datiCalendario += `Lavoro: ${l_ore}\n`;
+            if(v_ore) datiCalendario += `Viaggio: ${v_ore}\n`;
+            if(pch_val) datiCalendario += `Trasferta: ${pch_val}\n`;
+            if(matString) datiCalendario += `Materiale:\n${matString}`;
             // ---------------------------------------
 
             document.getElementById('loading-overlay').style.display = 'flex';
@@ -767,14 +767,12 @@
             document.getElementById('ricambi-body').appendChild(tr); attachListeners();
         }
 
-        // --- NUOVO: AUTO-COMPILAZIONE ORARI A CASCATA ---
         function autoFillNextTime(el) {
             const row = el.closest('tr');
             if(!row) return;
             const selects = Array.from(row.querySelectorAll('.time-select'));
             const idx = selects.indexOf(el);
             
-            // Se c'è una casella successiva e la casella successiva è vuota, la pre-compila
             if (idx !== -1 && idx < selects.length - 1) {
                 const nextSel = selects[idx + 1];
                 if (nextSel && !nextSel.value) {

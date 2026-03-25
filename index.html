@@ -656,8 +656,27 @@
             const emailCliente = document.getElementById('email_input').value;
             const element = document.getElementById('rapporto-foglio');
             const idUnivoco = document.getElementById('id_univoco_input').value;
+            const ticketVal = document.getElementById('n_rapporto_input').value || "Senza Ticket";
             const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
             const fileName = `Rapporto_${idUnivoco}_${nomeCliente}.pdf`.replace(/ /g, "_");
+
+            // --- RACCOLTA DATI PER IL CALENDARIO ---
+            let matString = "";
+            for(let i=1; i<=ricCount; i++) {
+                let c = document.getElementsByName(`rc_${i}`)[0]?.value;
+                let q = document.getElementsByName(`rq_${i}`)[0]?.value;
+                if(c && q) matString += `- ${q}x ${c}\n`;
+            }
+            let l_ore = document.getElementById('tot_lavoro_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';
+            let v_ore = document.getElementById('tot_viaggio_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';
+            let pch_val = document.getElementById('tot_pch_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';
+
+            let datiCalendario = `\n✅ RAPPORTO INVIATO (${idUnivoco})\n`;
+            if(l_ore) datiCalendario += `⏱ Lavoro: ${l_ore}\n`;
+            if(v_ore) datiCalendario += `🚗 Viaggio: ${v_ore}\n`;
+            if(pch_val) datiCalendario += `🏨 Trasferta: ${pch_val}\n`;
+            if(matString) datiCalendario += `🔧 Materiale:\n${matString}`;
+            // ---------------------------------------
 
             document.getElementById('loading-overlay').style.display = 'flex';
             document.getElementById('loading-text').innerText = "Generazione e Invio... Attendere";
@@ -671,10 +690,11 @@
                     const payload = { 
                         pdfBase64: pdfBase64, 
                         filename: fileName, 
-                        ticket: idUnivoco, 
+                        ticket: ticketVal, 
                         nomeCliente: nomeCliente, 
                         emailCliente: emailCliente,
-                        pin: currentPin 
+                        pin: currentPin,
+                        updateCalendario: datiCalendario // <-- Invia il testo da accodare
                     };
                     
                     fetch(APP_SCRIPT_URL, {
@@ -778,7 +798,7 @@
             };
 
             let totLavoro = 0; let totViaggio = 0;
-            let totP = 0, totC = 0, totH = 0; // Contatori per Pranzo, Cena, Hotel
+            let totP = 0, totC = 0, totH = 0; 
 
             for(let i=1; i<=rowCount; i++) {
                 let va1 = document.getElementsByName(`va1_${i}`)[0]?.value;
@@ -793,7 +813,6 @@
                 totViaggio += getDiff(va1, va2) + getDiff(vr1, vr2);
                 totLavoro += getDiff(lm1, lm2) + getDiff(lp1, lp2);
 
-                // Conta P, C, H
                 if (document.getElementsByName(`p_${i}`)[0]?.checked) totP++;
                 if (document.getElementsByName(`c_${i}`)[0]?.checked) totC++;
                 if (document.getElementsByName(`h_${i}`)[0]?.checked) totH++;
@@ -811,7 +830,6 @@
             if(spanLav) spanLav.innerText = formatOre(totLavoro);
             if(spanVia) spanVia.innerText = formatOre(totViaggio);
 
-            // Stampa PCH
             let pchText = [];
             if (totP > 0) pchText.push(`${totP} Pranzi`);
             if (totC > 0) pchText.push(`${totC} Cene`);

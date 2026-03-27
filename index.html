@@ -62,13 +62,11 @@
         th { background: var(--tmc-light-blue); font-size: 7px; border: 1px solid var(--tmc-blue); padding: 5px 2px; color: var(--tmc-blue); }
         td { border: 1px solid var(--tmc-blue); padding: 3px 1px; text-align: center; }
         
+        /* Stile per i campi orario dentro la tabella (ora diventati bottoni readonly) */
         .time-select { 
-            font-size: 12px; font-weight: bold; color: var(--tmc-blue); background: #fff; border: 1px solid #ddd; 
-            width: 48px; height: 26px; border-radius: 3px; 
-            text-align: center; 
-            appearance: none; 
-            -webkit-appearance: none; 
-            padding: 0; 
+            font-size: 11px; font-weight: bold; color: var(--tmc-blue); background: transparent; border: 1px solid transparent; 
+            width: 100%; height: 26px; border-radius: 3px; 
+            text-align: center; margin: 0; padding: 0; outline: none;
         }
 
         .pch-row { display: flex; justify-content: center; gap: 3px; font-size: 9px; font-weight: bold; align-items: center; }
@@ -112,6 +110,11 @@
         /* Modale Bozze */
         #drafts-overlay { z-index: 99998; }
         .draft-item { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding:12px 0; text-align:left; }
+
+        /* NUOVO: Modale Orari */
+        .modal-time-label { display:block; font-size:11px; font-weight:bold; color:var(--tmc-blue); margin-bottom:3px; }
+        .modal-time-group { display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px; background:#f9f9f9; padding:10px; border-radius:5px; border:1px solid #eee; }
+        .modal-time-select { width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:4px; outline:none; background:white; font-weight:bold; color:var(--tmc-blue); text-align:center; appearance: none; }
     </style>
 </head>
 <body>
@@ -131,11 +134,8 @@
         <div class="modal-box" style="max-height: 80%; overflow-y: auto; padding: 20px;">
             <h3 style="color:var(--tmc-blue); margin-top:0;">Archivio Bozze</h3>
             <p style="font-size: 11px; color: #666; margin-top: 0;">Salva i lavori in sospeso per completarli dopo.</p>
-            
             <button onclick="salvaBozzaAttuale()" style="background:#ff9800; margin-bottom:15px; font-size:13px; padding:12px;">+ SALVA RAPPORTO ATTUALE</button>
-            
             <div id="lista-bozze" style="margin-bottom: 15px;"></div>
-            
             <button onclick="chiudiBozze()" style="background:#444;">CHIUDI ARCHIVIO</button>
         </div>
     </div>
@@ -149,6 +149,62 @@
             <div style="padding:15px; display:flex; gap:10px; background:#f9f9f9; border-top:1px solid #ddd;">
                 <button onclick="chiudiEditorTesto(false)" style="flex:1; padding:15px; background:#eee; color:#333; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">ANNULLA</button>
                 <button onclick="chiudiEditorTesto(true)" style="flex:1; padding:15px; background:#25D366; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">CONFERMA E SALVA</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="time-editor-overlay" class="overlay-bg" style="display:none; padding: 10px; box-sizing: border-box; z-index: 99999;">
+        <div style="background:white; width:100%; max-width: 450px; max-height:95%; border-radius:8px; display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+            <div style="padding:15px; background:var(--tmc-blue); color:white; text-align:center;">
+                <b id="modal_time_title" style="font-size:16px;">COMPILA ORARI</b>
+            </div>
+            <div style="padding:15px; overflow-y:auto; flex:1;">
+                
+                <span class="modal-time-label">DATA INTERVENTO</span>
+                <input type="date" id="modal_d" style="width:100%; padding:12px; font-size:16px; margin-bottom:15px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box; color:var(--tmc-blue); font-weight:bold;">
+                
+                <span class="modal-time-label">VIAGGIO (Andata)</span>
+                <div class="modal-time-group">
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">Da</div><select id="modal_va1" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">A</div><select id="modal_va2" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                </div>
+
+                <span class="modal-time-label">LAVORO (Mattina)</span>
+                <div class="modal-time-group">
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">Da</div><select id="modal_lm1" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">A</div><select id="modal_lm2" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                </div>
+
+                <span class="modal-time-label">LAVORO (Pomeriggio)</span>
+                <div class="modal-time-group">
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">Da</div><select id="modal_lp1" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">A</div><select id="modal_lp2" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                </div>
+
+                <span class="modal-time-label">VIAGGIO (Ritorno)</span>
+                <div class="modal-time-group">
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">Da</div><select id="modal_vr1" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">A</div><select id="modal_vr2" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                </div>
+
+                <span class="modal-time-label">PASTI E PERNOTTAMENTO</span>
+                <div style="display:flex; justify-content:space-around; background:#f0f7ff; padding:15px; border-radius:5px; border:1px solid #cce0f5; margin-bottom:20px;">
+                    <label style="font-size:14px; font-weight:bold; color:var(--tmc-blue); display:flex; align-items:center; gap:5px;"><input type="checkbox" id="modal_p" style="width:25px; height:25px;"> Pranzo</label>
+                    <label style="font-size:14px; font-weight:bold; color:var(--tmc-blue); display:flex; align-items:center; gap:5px;"><input type="checkbox" id="modal_c" style="width:25px; height:25px;"> Cena</label>
+                    <label style="font-size:14px; font-weight:bold; color:var(--tmc-blue); display:flex; align-items:center; gap:5px;"><input type="checkbox" id="modal_h" style="width:25px; height:25px;"> Hotel</label>
+                </div>
+
+                <div style="background:#fff3e0; padding:15px; border-radius:5px; border:1px solid #ffcc80;">
+                    <b style="color:#e65100; font-size:12px; display:block; margin-bottom:5px;">COPIA ORARI SU ALTRO TECNICO:</b>
+                    <select id="modal_copy_to" style="width:100%; padding:12px; font-size:14px; border:1px solid #ffb74d; border-radius:4px; outline:none; font-weight:bold;">
+                        <option value="">-- Non copiare --</option>
+                    </select>
+                </div>
+
+            </div>
+            <div style="display:flex; gap:1px; background:#ddd;">
+                <button onclick="chiudiEditorOrari(false)" style="flex:1; padding:15px; background:#eee; color:#333; border:none; font-weight:bold; cursor:pointer;">ANNULLA</button>
+                <button onclick="chiudiEditorOrari(true)" style="flex:1; padding:15px; background:#25D366; color:white; border:none; font-weight:bold; cursor:pointer;">CONFERMA</button>
             </div>
         </div>
     </div>
@@ -249,6 +305,8 @@
                 </thead>
                 <tbody id="table-body"></tbody>
             </table>
+            
+            <p class="no-print" style="text-align:center; font-size:9px; color:#666; margin-top:2px;">👆 Tocca la data o gli orari nella tabella per aprire l'inserimento rapido</p>
 
             <div class="card" style="margin-top:10px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -390,7 +448,6 @@
             const ticket = document.getElementById('n_rapporto_input').value || "Nuovo";
             const cliente = document.getElementById('cliente_input').value || "Senza Cliente";
             const nomePredefinito = `${ticket} - ${cliente}`;
-            
             const nomeBozza = prompt("Inserisci un nome per riconoscere questa bozza:", nomePredefinito);
             if (!nomeBozza) return;
 
@@ -398,13 +455,7 @@
             document.querySelectorAll('.save-data').forEach(el => data[el.name] = (el.type==='checkbox' ? el.checked : el.value));
             const sig = localStorage.getItem('tmc_sig');
             
-            const bozza = {
-                id: Date.now(),
-                nome: nomeBozza,
-                data: data,
-                counts: {r: rowCount, ric: ricCount},
-                sig: sig
-            };
+            const bozza = { id: Date.now(), nome: nomeBozza, data: data, counts: {r: rowCount, ric: ricCount}, sig: sig };
 
             let archivio = JSON.parse(localStorage.getItem('tmc_archivio_bozze') || '[]');
             archivio.push(bozza);
@@ -440,18 +491,14 @@
 
         function caricaBozzaDallArchivio(id) {
             if(!confirm("⚠️ Vuoi caricare questa bozza?\n\nI dati presenti ora sullo schermo verranno sostituiti.")) return;
-            
             const archivio = JSON.parse(localStorage.getItem('tmc_archivio_bozze') || '[]');
             const bozza = archivio.find(b => b.id === id);
             if(!bozza) return;
 
             localStorage.setItem('tmc_bozza', JSON.stringify(bozza.data));
             localStorage.setItem('tmc_counts', JSON.stringify(bozza.counts));
-            if (bozza.sig) {
-                localStorage.setItem('tmc_sig', bozza.sig);
-            } else {
-                localStorage.removeItem('tmc_sig');
-            }
+            if (bozza.sig) localStorage.setItem('tmc_sig', bozza.sig);
+            else localStorage.removeItem('tmc_sig');
             
             chiudiBozze();
             loadDraft(); 
@@ -631,7 +678,6 @@
             const fileName = `Rapporto_${idUnivoco}_${nomeCliente}.pdf`.replace(/ /g, "_");
 
             alert("Generazione del PDF in corso... Attendi l'apertura del menu di condivisione.");
-            
             preparaSchermoPerPDF();
 
             setTimeout(() => {
@@ -659,7 +705,6 @@
             const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
             const fileName = `Rapporto_${idUnivoco}_${nomeCliente}.pdf`.replace(/ /g, "_");
 
-            // --- RACCOLTA DATI PER IL CALENDARIO SENZA EMOJI ---
             let matString = "";
             for(let i=1; i<=ricCount; i++) {
                 let c = document.getElementsByName(`rc_${i}`)[0]?.value;
@@ -675,7 +720,6 @@
             if(v_ore) datiCalendario += `Viaggio: ${v_ore}\n`;
             if(pch_val) datiCalendario += `Trasferta: ${pch_val}\n`;
             if(matString) datiCalendario += `Materiale:\n${matString}`;
-            // ---------------------------------------
 
             document.getElementById('loading-overlay').style.display = 'flex';
             document.getElementById('loading-text').innerText = "Generazione e Invio... Attendere";
@@ -684,42 +728,28 @@
             setTimeout(() => {
                 html2pdf().set(getPdfOptions(fileName)).from(element).outputPdf('datauristring').then(function(pdfBase64) {
                     ripristinaSchermo();
-                    
                     const currentPin = localStorage.getItem('tmc_auth_token');
                     const payload = { 
-                        pdfBase64: pdfBase64, 
-                        filename: fileName, 
-                        ticket: ticketVal, 
-                        nomeCliente: nomeCliente, 
-                        emailCliente: emailCliente,
-                        pin: currentPin,
-                        updateCalendario: datiCalendario 
+                        pdfBase64: pdfBase64, filename: fileName, ticket: ticketVal, 
+                        nomeCliente: nomeCliente, emailCliente: emailCliente, pin: currentPin, updateCalendario: datiCalendario 
                     };
                     
                     fetch(APP_SCRIPT_URL, {
-                        method: "POST",
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                        body: JSON.stringify(payload)
+                        method: "POST", headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload)
                     })
                     .then(response => response.json())
                     .then(data => {
                         document.getElementById('loading-overlay').style.display = 'none';
-                        
                         if (gestisciErroreServer(data)) return;
-
-                        if(data.success) {
-                            alert("Email inviata con successo in sede " + (emailCliente ? "e al cliente!" : "(nessuna email cliente inserita)."));
-                        } else {
-                            alert("Errore invio: " + data.error);
-                        }
+                        if(data.success) { alert("Email inviata con successo in sede " + (emailCliente ? "e al cliente!" : "(nessuna email cliente inserita).")); } 
+                        else { alert("Errore invio: " + data.error); }
                     })
                     .catch(e => {
                         document.getElementById('loading-overlay').style.display = 'none';
                         alert("Errore di rete durante l'invio.");
                     });
                 }).catch(err => {
-                    ripristinaSchermo();
-                    document.getElementById('loading-overlay').style.display = 'none';
+                    ripristinaSchermo(); document.getElementById('loading-overlay').style.display = 'none';
                 });
             }, 100);
         }
@@ -740,22 +770,117 @@
             return opt;
         }
 
+        // --- NUOVA LOGICA TABELLA (INPUT READONLY CHE APRONO IL MODAL) ---
         function addRow() {
             if (rowCount >= 8) return;
-            rowCount++; const opt = getTimeOptions();
+            rowCount++;
             const tr = document.createElement('tr');
-            tr.innerHTML = `<td><input type="date" class="save-data" name="d_${rowCount}" style="font-size:9px;"></td>
+            tr.innerHTML = `
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data" name="d_${rowCount}" placeholder="Data" readonly style="font-size:9px; text-align:center; width:100%; pointer-events:none; border:none; background:transparent;"></td>
                 <td><input type="text" class="save-data caps" name="tec_${rowCount}" placeholder="Nome" style="font-size:8px; text-align:center; width:100%;"></td>
-                <td><select class="save-data time-select" name="va1_${rowCount}">${opt}</select></td><td><select class="save-data time-select" name="va2_${rowCount}">${opt}</select></td>
-                <td><select class="save-data time-select" name="lm1_${rowCount}">${opt}</select></td><td><select class="save-data time-select" name="lm2_${rowCount}">${opt}</select></td>
-                <td><select class="save-data time-select" name="lp1_${rowCount}">${opt}</select></td><td><select class="save-data time-select" name="lp2_${rowCount}">${opt}</select></td>
-                <td><select class="save-data time-select" name="vr1_${rowCount}">${opt}</select></td><td><select class="save-data time-select" name="vr2_${rowCount}">${opt}</select></td>
-                <td><div class="pch-row">
-                    P<input type="checkbox" class="save-data" name="p_${rowCount}">
-                    C<input type="checkbox" class="save-data" name="c_${rowCount}">
-                    H<input type="checkbox" class="save-data" name="h_${rowCount}">
-                </div></td>`;
-            document.getElementById('table-body').appendChild(tr); attachListeners();
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="va1_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="va2_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="lm1_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="lm2_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="lp1_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="lp2_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="vr1_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="vr2_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;">
+                    <div class="pch-row" style="pointer-events:none;">
+                        P<input type="checkbox" class="save-data" name="p_${rowCount}">
+                        C<input type="checkbox" class="save-data" name="c_${rowCount}">
+                        H<input type="checkbox" class="save-data" name="h_${rowCount}">
+                    </div>
+                </td>`;
+            document.getElementById('table-body').appendChild(tr); 
+            attachListeners();
+        }
+
+        // --- GESTIONE MODALE ORARI RAPIDO ---
+        let currentEditRow = null;
+
+        function formattaDataPerModal(valoreDataTabella) {
+            if(!valoreDataTabella) return "";
+            if(valoreDataTabella.includes('/')) {
+                const parts = valoreDataTabella.split('/');
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return valoreDataTabella;
+        }
+
+        function formattaDataPerTabella(valoreDataModal) {
+            if(!valoreDataModal) return "";
+            if(valoreDataModal.includes('-')) {
+                const parts = valoreDataModal.split('-');
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return valoreDataModal;
+        }
+
+        function apriEditorOrari(rowIdx) {
+            currentEditRow = rowIdx;
+            const tecName = document.getElementsByName(`tec_${rowIdx}`)[0].value || `TECNICO RIGA ${rowIdx}`;
+            document.getElementById('modal_time_title').innerText = `ORARI: ${tecName.toUpperCase()}`;
+            
+            // Popolamento Options per i Select (viene fatto una volta qui in modo sicuro)
+            const timeFields = ['va1','va2','lm1','lm2','lp1','lp2','vr1','vr2'];
+            timeFields.forEach(f => { document.getElementById(`modal_${f}`).innerHTML = getTimeOptions(); });
+
+            // Caricamento Dati dalla riga della tabella al Modal
+            document.getElementById('modal_d').value = formattaDataPerModal(document.getElementsByName(`d_${rowIdx}`)[0].value);
+            timeFields.forEach(f => { document.getElementById(`modal_${f}`).value = document.getElementsByName(`${f}_${rowIdx}`)[0].value; });
+            document.getElementById('modal_p').checked = document.getElementsByName(`p_${rowIdx}`)[0].checked;
+            document.getElementById('modal_c').checked = document.getElementsByName(`c_${rowIdx}`)[0].checked;
+            document.getElementById('modal_h').checked = document.getElementsByName(`h_${rowIdx}`)[0].checked;
+
+            // Popolamento Copia-Su (mostra le altre righe attive)
+            const copyTo = document.getElementById('modal_copy_to');
+            copyTo.innerHTML = '<option value="">-- Non copiare --</option>';
+            for(let i=1; i<=rowCount; i++) {
+                if (i !== rowIdx) {
+                    const name = document.getElementsByName(`tec_${i}`)[0].value || `Riga ${i}`;
+                    copyTo.innerHTML += `<option value="${i}">${name.toUpperCase()}</option>`;
+                }
+            }
+
+            document.getElementById('time-editor-overlay').style.display = 'flex';
+        }
+
+        function chiudiEditorOrari(salva) {
+            if(salva && currentEditRow) {
+                const rowIdx = currentEditRow;
+                const timeFields = ['va1','va2','lm1','lm2','lp1','lp2','vr1','vr2'];
+                
+                // Salva i dati nella riga corrente
+                document.getElementsByName(`d_${rowIdx}`)[0].value = formattaDataPerTabella(document.getElementById('modal_d').value);
+                timeFields.forEach(f => { document.getElementsByName(`${f}_${rowIdx}`)[0].value = document.getElementById(`modal_${f}`).value; });
+                document.getElementsByName(`p_${rowIdx}`)[0].checked = document.getElementById('modal_p').checked;
+                document.getElementsByName(`c_${rowIdx}`)[0].checked = document.getElementById('modal_c').checked;
+                document.getElementsByName(`h_${rowIdx}`)[0].checked = document.getElementById('modal_h').checked;
+
+                // Funzione Magica: Clona sulla riga selezionata!
+                const copyTarget = document.getElementById('modal_copy_to').value;
+                if (copyTarget) {
+                    document.getElementsByName(`d_${copyTarget}`)[0].value = formattaDataPerTabella(document.getElementById('modal_d').value);
+                    timeFields.forEach(f => { document.getElementsByName(`${f}_${copyTarget}`)[0].value = document.getElementById(`modal_${f}`).value; });
+                    document.getElementsByName(`p_${copyTarget}`)[0].checked = document.getElementById('modal_p').checked;
+                    document.getElementsByName(`c_${copyTarget}`)[0].checked = document.getElementById('modal_c').checked;
+                    document.getElementsByName(`h_${copyTarget}`)[0].checked = document.getElementById('modal_h').checked;
+                }
+                
+                calc(); // Ricalcola i totali in tempo reale
+            }
+            document.getElementById('time-editor-overlay').style.display = 'none';
+        }
+
+        function modalAutoFill(el) {
+            const selects = Array.from(document.querySelectorAll('.modal-time-select'));
+            const idx = selects.indexOf(el);
+            if (idx !== -1 && idx < selects.length - 1) {
+                const nextSel = selects[idx + 1];
+                if (nextSel && !nextSel.value) nextSel.value = el.value;
+            }
         }
 
         function addRicambio() {
@@ -765,20 +890,6 @@
                 <td><input type="number" class="save-data qta" name="rq_${ricCount}" oninput="calc()"></td><td><input type="number" class="save-data unit" name="ru_${ricCount}" step="0.01" oninput="calc()"></td>
                 <td><input type="text" id="rt_${ricCount}" readonly style="background:#f9f9f9;"></td>`;
             document.getElementById('ricambi-body').appendChild(tr); attachListeners();
-        }
-
-        function autoFillNextTime(el) {
-            const row = el.closest('tr');
-            if(!row) return;
-            const selects = Array.from(row.querySelectorAll('.time-select'));
-            const idx = selects.indexOf(el);
-            
-            if (idx !== -1 && idx < selects.length - 1) {
-                const nextSel = selects[idx + 1];
-                if (nextSel && !nextSel.value) {
-                    nextSel.value = el.value;
-                }
-            }
         }
 
         function calc() {
@@ -849,9 +960,7 @@
             if (totH > 0) pchText.push(`${totH} Hotel`);
             
             const spanPCH = document.getElementById('tot_pch_span');
-            if (spanPCH) {
-                spanPCH.innerText = pchText.length > 0 ? ` [TOTALE: ${pchText.join(' - ')}]` : "";
-            }
+            if (spanPCH) { spanPCH.innerText = pchText.length > 0 ? ` [TOTALE: ${pchText.join(' - ')}]` : ""; }
 
             saveDraft();
         }
@@ -920,35 +1029,15 @@
             calc();
         }
         
-        function attachListeners() { 
-            document.querySelectorAll('.save-data').forEach(el => {
-                el.oninput = calc;
-                if(el.classList.contains('time-select')) {
-                    el.addEventListener('change', function() {
-                        autoFillNextTime(this);
-                        calc();
-                    });
-                }
-            }); 
-        }
-
+        function attachListeners() { document.querySelectorAll('.save-data').forEach(el => { el.oninput = calc; }); }
         function nuovoRapporto() { if(confirm("Cancellare tutti i dati a schermo e iniziare un modulo vuoto?")) { localStorage.removeItem('tmc_bozza'); localStorage.removeItem('tmc_counts'); localStorage.removeItem('tmc_sig'); location.reload(); } }
 
         window.onload = function() {
             const savedPin = localStorage.getItem('tmc_auth_token');
-            if(savedPin && savedPin !== "") {
-                sbloccaApp();
-            } else {
-                document.getElementById('login-overlay').style.display = 'flex';
-                document.getElementById('app-content').style.display = 'none';
-            }
+            if(savedPin && savedPin !== "") sbloccaApp();
+            else { document.getElementById('login-overlay').style.display = 'flex'; document.getElementById('app-content').style.display = 'none'; }
             
-            document.getElementById('pin_input').addEventListener("keypress", function(event) {
-                if (event.key === "Enter") {
-                    event.preventDefault();
-                    verificaLogin();
-                }
-            });
+            document.getElementById('pin_input').addEventListener("keypress", function(event) { if (event.key === "Enter") { event.preventDefault(); verificaLogin(); } });
         };
     </script>
 </body>

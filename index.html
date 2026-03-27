@@ -20,18 +20,19 @@
             .page-a4 { width: 100%; margin: 0; padding: 10px; box-shadow: none; }
         }
 
+        /* FIX PER MULTIPAGINA E TAGLI SECCHI IN PDF */
         body.pdf-mode { background: white !important; }
         body.pdf-mode .page-a4 {
             width: 210mm !important;
-            height: 297mm !important; 
+            height: auto !important; /* Sbloccata altezza per multipagina */
+            min-height: 297mm !important;
             max-width: none !important;
-            min-height: auto !important;
             margin: 0 !important;
             padding: 2mm 8mm !important;
             box-shadow: none !important;
             border: none !important;
             transform: none !important;
-            overflow: hidden !important;
+            overflow: visible !important; /* Permette al contenuto di scendere */
         }
         body.pdf-mode .no-print { display: none !important; }
 
@@ -62,7 +63,6 @@
         th { background: var(--tmc-light-blue); font-size: 7px; border: 1px solid var(--tmc-blue); padding: 5px 2px; color: var(--tmc-blue); }
         td { border: 1px solid var(--tmc-blue); padding: 3px 1px; text-align: center; }
         
-        /* Stile per i campi orario dentro la tabella (ora diventati bottoni readonly) */
         .time-select { 
             font-size: 11px; font-weight: bold; color: var(--tmc-blue); background: transparent; border: 1px solid transparent; 
             width: 100%; height: 26px; border-radius: 3px; 
@@ -91,10 +91,12 @@
         .btn-dark { background: #444; }
         .btn-sync { position: absolute; right: 10px; top: 10px; font-size: 20px; background: none; border: none; cursor: pointer; z-index: 10; }
 
+        /* PREVENZIONE TAGLI IN STAMPA NATIVA */
         @media print { 
             body { background: white; }
-            .page-a4 { margin: 0; border: none; box-shadow: none; width: 210mm; height: 297mm; padding: 2mm 8mm; }
+            .page-a4 { margin: 0; border: none; box-shadow: none; width: 210mm; height: auto; min-height: 297mm; padding: 2mm 8mm; }
             .no-print, .btn-sync { display: none !important; } 
+            .card, tr, .bottom-grid, .main-title-container { page-break-inside: avoid; break-inside: avoid; }
         }
         
         #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; color: white; flex-direction: column; justify-content: center; align-items: center; font-family: sans-serif; font-weight: bold; text-align: center; padding: 20px;}
@@ -111,7 +113,7 @@
         #drafts-overlay { z-index: 99998; }
         .draft-item { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding:12px 0; text-align:left; }
 
-        /* NUOVO: Modale Orari */
+        /* Modale Orari */
         .modal-time-label { display:block; font-size:11px; font-weight:bold; color:var(--tmc-blue); margin-bottom:3px; }
         .modal-time-group { display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px; background:#f9f9f9; padding:10px; border-radius:5px; border:1px solid #eee; }
         .modal-time-select { width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:4px; outline:none; background:white; font-weight:bold; color:var(--tmc-blue); text-align:center; appearance: none; }
@@ -276,7 +278,7 @@
                         </div>
                         <div class="input-field" style="margin-bottom:12px;">
                             <label>Sede Intervento</label>
-                            <input type="text" id="indirizzo_input" name="indirizzo" class="save-data caps">
+                            <textarea id="indirizzo_input" name="indirizzo" class="save-data caps" rows="2" style="font-family: inherit; resize: none; overflow: hidden; padding: 2px 0;"></textarea>
                         </div>
                         
                         <div style="display:flex; gap:10px;">
@@ -658,13 +660,16 @@
             document.getElementById('descrizione_print').style.display = 'none';
         }
 
+        // --- IMPOSTAZIONI PDF AGGIORNATE PER EVITARE TAGLI ---
         function getPdfOptions(fileName) {
             return {
-                margin: 0, 
+                margin: [5, 0, 5, 0], // Margini di sicurezza per respiro
                 filename: fileName, 
                 image: { type: 'jpeg', quality: 0.98 }, 
                 html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, 
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                // Evita assolutamente di tagliare a metà le tabelle, le card e i blocchi firma
+                pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.card', '.bottom-grid', '.main-title-container'] }
             };
         }
 
@@ -770,9 +775,8 @@
             return opt;
         }
 
-        // --- NUOVA LOGICA TABELLA (INPUT READONLY CHE APRONO IL MODAL) ---
+        // --- RIMOSSO LIMITE DI 8 RIGHE ---
         function addRow() {
-            if (rowCount >= 8) return;
             rowCount++;
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -797,7 +801,6 @@
             attachListeners();
         }
 
-        // --- GESTIONE MODALE ORARI RAPIDO ---
         let currentEditRow = null;
 
         function formattaDataPerModal(valoreDataTabella) {
@@ -823,18 +826,15 @@
             const tecName = document.getElementsByName(`tec_${rowIdx}`)[0].value || `TECNICO RIGA ${rowIdx}`;
             document.getElementById('modal_time_title').innerText = `ORARI: ${tecName.toUpperCase()}`;
             
-            // Popolamento Options per i Select (viene fatto una volta qui in modo sicuro)
             const timeFields = ['va1','va2','lm1','lm2','lp1','lp2','vr1','vr2'];
             timeFields.forEach(f => { document.getElementById(`modal_${f}`).innerHTML = getTimeOptions(); });
 
-            // Caricamento Dati dalla riga della tabella al Modal
             document.getElementById('modal_d').value = formattaDataPerModal(document.getElementsByName(`d_${rowIdx}`)[0].value);
             timeFields.forEach(f => { document.getElementById(`modal_${f}`).value = document.getElementsByName(`${f}_${rowIdx}`)[0].value; });
             document.getElementById('modal_p').checked = document.getElementsByName(`p_${rowIdx}`)[0].checked;
             document.getElementById('modal_c').checked = document.getElementsByName(`c_${rowIdx}`)[0].checked;
             document.getElementById('modal_h').checked = document.getElementsByName(`h_${rowIdx}`)[0].checked;
 
-            // Popolamento Copia-Su (mostra le altre righe attive)
             const copyTo = document.getElementById('modal_copy_to');
             copyTo.innerHTML = '<option value="">-- Non copiare --</option>';
             for(let i=1; i<=rowCount; i++) {
@@ -852,14 +852,12 @@
                 const rowIdx = currentEditRow;
                 const timeFields = ['va1','va2','lm1','lm2','lp1','lp2','vr1','vr2'];
                 
-                // Salva i dati nella riga corrente
                 document.getElementsByName(`d_${rowIdx}`)[0].value = formattaDataPerTabella(document.getElementById('modal_d').value);
                 timeFields.forEach(f => { document.getElementsByName(`${f}_${rowIdx}`)[0].value = document.getElementById(`modal_${f}`).value; });
                 document.getElementsByName(`p_${rowIdx}`)[0].checked = document.getElementById('modal_p').checked;
                 document.getElementsByName(`c_${rowIdx}`)[0].checked = document.getElementById('modal_c').checked;
                 document.getElementsByName(`h_${rowIdx}`)[0].checked = document.getElementById('modal_h').checked;
 
-                // Funzione Magica: Clona sulla riga selezionata!
                 const copyTarget = document.getElementById('modal_copy_to').value;
                 if (copyTarget) {
                     document.getElementsByName(`d_${copyTarget}`)[0].value = formattaDataPerTabella(document.getElementById('modal_d').value);
@@ -869,7 +867,7 @@
                     document.getElementsByName(`h_${copyTarget}`)[0].checked = document.getElementById('modal_h').checked;
                 }
                 
-                calc(); // Ricalcola i totali in tempo reale
+                calc(); 
             }
             document.getElementById('time-editor-overlay').style.display = 'none';
         }

@@ -660,15 +660,13 @@
             document.getElementById('descrizione_print').style.display = 'none';
         }
 
-        // --- IMPOSTAZIONI PDF AGGIORNATE PER EVITARE TAGLI ---
         function getPdfOptions(fileName) {
             return {
-                margin: [5, 0, 5, 0], // Margini di sicurezza per respiro
+                margin: [5, 0, 5, 0], 
                 filename: fileName, 
                 image: { type: 'jpeg', quality: 0.98 }, 
                 html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, 
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                // Evita assolutamente di tagliare a metà le tabelle, le card e i blocchi firma
                 pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.card', '.bottom-grid', '.main-title-container'] }
             };
         }
@@ -710,12 +708,22 @@
             const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
             const fileName = `Rapporto_${idUnivoco}_${nomeCliente}.pdf`.replace(/ /g, "_");
 
+            // --- NUOVA LOGICA MATERIALI (CON DESCRIZIONE) ---
             let matString = "";
             for(let i=1; i<=ricCount; i++) {
-                let c = document.getElementsByName(`rc_${i}`)[0]?.value;
-                let q = document.getElementsByName(`rq_${i}`)[0]?.value;
-                if(c && q) matString += `- ${q}x ${c}\n`;
+                let c = document.getElementsByName(`rc_${i}`)[0]?.value || "";
+                let d = document.getElementsByName(`rd_${i}`)[0]?.value || "";
+                let q = document.getElementsByName(`rq_${i}`)[0]?.value || "";
+                
+                if (q && (c || d)) {
+                    let descParts = [];
+                    if (c) descParts.push(c);
+                    if (d) descParts.push(d);
+                    matString += `- ${q}x ${descParts.join(' - ')}\n`;
+                }
             }
+            // -----------------------------------------------
+
             let l_ore = document.getElementById('tot_lavoro_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';
             let v_ore = document.getElementById('tot_viaggio_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';
             let pch_val = document.getElementById('tot_pch_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';
@@ -775,7 +783,6 @@
             return opt;
         }
 
-        // --- RIMOSSO LIMITE DI 8 RIGHE ---
         function addRow() {
             rowCount++;
             const tr = document.createElement('tr');

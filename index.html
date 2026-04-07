@@ -20,7 +20,6 @@
             .page-a4 { width: 100%; margin: 0; padding: 10px; box-shadow: none; }
         }
 
-        /* FIX PDF */
         body.pdf-mode { background: white !important; }
         body.pdf-mode .page-a4 {
             width: 210mm !important;
@@ -55,15 +54,6 @@
         input, textarea, select { border: none; border-bottom: 1px solid #cce0f5; padding: 4px 0; font-size: 12px; outline: none; width: 100%; background: transparent; }
         .caps { text-transform: uppercase; }
 
-        /* INPUT ORA NATIVO */
-        input[type="time"] { 
-            font-size: 11px; text-align: center; color: var(--tmc-blue); font-weight: bold; 
-            border: 1px solid transparent; cursor: pointer; padding: 0; width: 100%;
-        }
-        input[type="time"]::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
-        input[type="date"] { font-size: 9px; text-align: center; padding: 0; width: 100%; color: #333; }
-        input[type="date"]::-webkit-calendar-picker-indicator { display: none; -webkit-appearance: none; }
-
         .tecnico-combo { position: relative; width: 100%; height: 25px; }
         .tecnico-input-main { position: absolute; top: 0; left: 0; width: calc(100% - 25px); border-bottom: 1px solid #cce0f5; z-index: 2; background: white; text-transform: uppercase; }
         .tecnico-select-bg { width: 100%; position: relative; z-index: 1; }
@@ -72,6 +62,12 @@
         th { background: var(--tmc-light-blue); font-size: 7px; border: 1px solid var(--tmc-blue); padding: 5px 2px; color: var(--tmc-blue); }
         td { border: 1px solid var(--tmc-blue); padding: 3px 1px; text-align: center; }
         
+        .time-select { 
+            font-size: 11px; font-weight: bold; color: var(--tmc-blue); background: transparent; border: 1px solid transparent; 
+            width: 100%; height: 26px; border-radius: 3px; 
+            text-align: center; margin: 0; padding: 0; outline: none;
+        }
+
         .pch-row { display: flex; justify-content: center; gap: 3px; font-size: 9px; font-weight: bold; align-items: center; }
         .pch-row input { width: auto; margin: 0; }
 
@@ -111,8 +107,16 @@
         .modal-box input { border: 2px solid var(--tmc-blue); padding: 12px; margin: 20px 0; width: calc(100% - 24px); font-size: 18px; text-align: center; border-radius: 5px; outline: none; }
         .modal-box button { background: var(--tmc-blue); color: white; border: none; padding: 15px; font-size: 16px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; }
         
+        /* Modale Bozze */
         #drafts-overlay { z-index: 99998; }
         .draft-item { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding:12px 0; text-align:left; }
+
+        /* Modale Orari */
+        .modal-time-label { display:block; font-size:11px; font-weight:bold; color:var(--tmc-blue); margin-bottom:3px; }
+        .modal-time-group { display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px; background:#f9f9f9; padding:10px; border-radius:5px; border:1px solid #eee; }
+        .modal-time-select { width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:4px; outline:none; background:white; font-weight:bold; color:var(--tmc-blue); text-align:center; appearance: none; }
+        
+        /* Modale Selezione Ticket */
         .ticket-btn { background:#f0f7ff; color:var(--tmc-blue); border:1px solid var(--tmc-blue); padding:10px; text-align:left; border-radius:5px; margin-bottom:8px; width:100%; cursor:pointer; }
         .ticket-btn:hover { background:var(--tmc-blue); color:white; }
     </style>
@@ -158,6 +162,62 @@
             <div style="padding:15px; display:flex; gap:10px; background:#f9f9f9; border-top:1px solid #ddd;">
                 <button onclick="chiudiEditorTesto(false)" style="flex:1; padding:15px; background:#eee; color:#333; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">ANNULLA</button>
                 <button onclick="chiudiEditorTesto(true)" style="flex:1; padding:15px; background:#25D366; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">CONFERMA E SALVA</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="time-editor-overlay" class="overlay-bg" style="display:none; padding: 10px; box-sizing: border-box; z-index: 99999;">
+        <div style="background:white; width:100%; max-width: 450px; max-height:95%; border-radius:8px; display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+            <div style="padding:15px; background:var(--tmc-blue); color:white; text-align:center;">
+                <b id="modal_time_title" style="font-size:16px;">COMPILA ORARI</b>
+            </div>
+            <div style="padding:15px; overflow-y:auto; flex:1;">
+                
+                <span class="modal-time-label">DATA INTERVENTO</span>
+                <input type="date" id="modal_d" style="width:100%; padding:12px; font-size:16px; margin-bottom:15px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box; color:var(--tmc-blue); font-weight:bold;">
+                
+                <span class="modal-time-label">VIAGGIO (Andata)</span>
+                <div class="modal-time-group">
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">Da</div><select id="modal_va1" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">A</div><select id="modal_va2" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                </div>
+
+                <span class="modal-time-label">LAVORO (Mattina)</span>
+                <div class="modal-time-group">
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">Da</div><select id="modal_lm1" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">A</div><select id="modal_lm2" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                </div>
+
+                <span class="modal-time-label">LAVORO (Pomeriggio)</span>
+                <div class="modal-time-group">
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">Da</div><select id="modal_lp1" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">A</div><select id="modal_lp2" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                </div>
+
+                <span class="modal-time-label">VIAGGIO (Ritorno)</span>
+                <div class="modal-time-group">
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">Da</div><select id="modal_vr1" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">A</div><select id="modal_vr2" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
+                </div>
+
+                <span class="modal-time-label">PASTI E PERNOTTAMENTO</span>
+                <div style="display:flex; justify-content:space-around; background:#f0f7ff; padding:15px; border-radius:5px; border:1px solid #cce0f5; margin-bottom:20px;">
+                    <label style="font-size:14px; font-weight:bold; color:var(--tmc-blue); display:flex; align-items:center; gap:5px;"><input type="checkbox" id="modal_p" style="width:25px; height:25px;"> Pranzo</label>
+                    <label style="font-size:14px; font-weight:bold; color:var(--tmc-blue); display:flex; align-items:center; gap:5px;"><input type="checkbox" id="modal_c" style="width:25px; height:25px;"> Cena</label>
+                    <label style="font-size:14px; font-weight:bold; color:var(--tmc-blue); display:flex; align-items:center; gap:5px;"><input type="checkbox" id="modal_h" style="width:25px; height:25px;"> Hotel</label>
+                </div>
+
+                <div style="background:#fff3e0; padding:15px; border-radius:5px; border:1px solid #ffcc80;">
+                    <b style="color:#e65100; font-size:12px; display:block; margin-bottom:5px;">COPIA ORARI SU ALTRO TECNICO:</b>
+                    <select id="modal_copy_to" style="width:100%; padding:12px; font-size:14px; border:1px solid #ffb74d; border-radius:4px; outline:none; font-weight:bold;">
+                        <option value="">-- Non copiare --</option>
+                    </select>
+                </div>
+
+            </div>
+            <div style="display:flex; gap:1px; background:#ddd;">
+                <button onclick="chiudiEditorOrari(false)" style="flex:1; padding:15px; background:#eee; color:#333; border:none; font-weight:bold; cursor:pointer;">ANNULLA</button>
+                <button onclick="chiudiEditorOrari(true)" style="flex:1; padding:15px; background:#25D366; color:white; border:none; font-weight:bold; cursor:pointer;">CONFERMA</button>
             </div>
         </div>
     </div>
@@ -262,6 +322,8 @@
                 </thead>
                 <tbody id="table-body"></tbody>
             </table>
+            
+            <p class="no-print" style="text-align:center; font-size:9px; color:#666; margin-top:2px;">👆 Tocca la data o gli orari nella tabella per aprire l'inserimento rapido</p>
 
             <div class="card" style="margin-top:10px;">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -341,7 +403,6 @@
     </div>
 
     <script>
-        // LINK CORRETTO E DEFINITIVO AL SERVER APP SCRIPT
         const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxh6R-LKwzIsbzNgTyf41AZTs3fxd_CqTE2bLQLQFcx7mwpb-ueqOARluwFPQFW47jM/exec";
         
         async function verificaLogin() {
@@ -551,6 +612,7 @@
             return true;
         }
 
+        // --- NUOVA LOGICA DI IMPORTAZIONE MULTIPLA E RICERCA TICKET ---
         async function importaDaCalendario(mode = 'tecnico') {
             let url = `${APP_SCRIPT_URL}?pin=${encodeURIComponent(localStorage.getItem('tmc_auth_token'))}`;
             
@@ -576,9 +638,11 @@
                 if (gestisciErroreServer(data)) return;
 
                 if (data.results && data.results.length > 0) {
+                    // Se ha trovato 1 solo intervento, lo carica subito
                     if (data.results.length === 1) {
                         applicaDatiCalendario(data.results[0]);
                     } else {
+                        // Se ne ha trovati di più, apre il modale per scegliere
                         mostraSelezioneTicket(data.results);
                     }
                 } else { 
@@ -760,34 +824,31 @@
             saveDraft();
         }
 
-        function autoFillNext(currentEl) {
-            const tr = currentEl.closest('tr');
-            const timeInputs = Array.from(tr.querySelectorAll('input[type="time"]'));
-            const currentIndex = timeInputs.indexOf(currentEl);
-            
-            if (currentEl.value && currentIndex !== -1 && currentIndex < timeInputs.length - 1) {
-                const nextInput = timeInputs[currentIndex + 1];
-                if (!nextInput.value) { nextInput.value = currentEl.value; }
+        function getTimeOptions() {
+            let opt = '<option value="">--</option>';
+            for(let h=5; h<=22; h++) {
+                let hh = h < 10 ? '0'+h : h;
+                ['00','30'].forEach(mm => { if(!(h==22 && mm=='30')) opt += `<option value="${hh}:${mm}">${hh}:${mm}</option>`; });
             }
-            calc();
+            return opt;
         }
 
         function addRow() {
             rowCount++;
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><input type="date" class="save-data" name="d_${rowCount}"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data" name="d_${rowCount}" placeholder="Data" readonly style="font-size:9px; text-align:center; width:100%; pointer-events:none; border:none; background:transparent;"></td>
                 <td><input type="text" class="save-data caps" name="tec_${rowCount}" placeholder="Nome" style="font-size:8px; text-align:center; width:100%;"></td>
-                <td><input type="time" class="save-data" name="va1_${rowCount}" onchange="autoFillNext(this)"></td>
-                <td><input type="time" class="save-data" name="va2_${rowCount}" onchange="autoFillNext(this)"></td>
-                <td><input type="time" class="save-data" name="lm1_${rowCount}" onchange="autoFillNext(this)"></td>
-                <td><input type="time" class="save-data" name="lm2_${rowCount}" onchange="autoFillNext(this)"></td>
-                <td><input type="time" class="save-data" name="lp1_${rowCount}" onchange="autoFillNext(this)"></td>
-                <td><input type="time" class="save-data" name="lp2_${rowCount}" onchange="autoFillNext(this)"></td>
-                <td><input type="time" class="save-data" name="vr1_${rowCount}" onchange="autoFillNext(this)"></td>
-                <td><input type="time" class="save-data" name="vr2_${rowCount}" onchange="autoFillNext(this)"></td>
-                <td>
-                    <div class="pch-row">
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="va1_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="va2_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="lm1_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="lm2_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="lp1_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="lp2_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="vr1_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="vr2_${rowCount}" readonly style="pointer-events:none;"></td>
+                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;">
+                    <div class="pch-row" style="pointer-events:none;">
                         P<input type="checkbox" class="save-data" name="p_${rowCount}">
                         C<input type="checkbox" class="save-data" name="c_${rowCount}">
                         H<input type="checkbox" class="save-data" name="h_${rowCount}">
@@ -795,6 +856,86 @@
                 </td>`;
             document.getElementById('table-body').appendChild(tr); 
             attachListeners();
+        }
+
+        let currentEditRow = null;
+
+        function formattaDataPerModal(valoreDataTabella) {
+            if(!valoreDataTabella) return "";
+            if(valoreDataTabella.includes('/')) {
+                const parts = valoreDataTabella.split('/');
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return valoreDataTabella;
+        }
+
+        function formattaDataPerTabella(valoreDataModal) {
+            if(!valoreDataModal) return "";
+            if(valoreDataModal.includes('-')) {
+                const parts = valoreDataModal.split('-');
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return valoreDataModal;
+        }
+
+        function apriEditorOrari(rowIdx) {
+            currentEditRow = rowIdx;
+            const tecName = document.getElementsByName(`tec_${rowIdx}`)[0].value || `TECNICO RIGA ${rowIdx}`;
+            document.getElementById('modal_time_title').innerText = `ORARI: ${tecName.toUpperCase()}`;
+            
+            const timeFields = ['va1','va2','lm1','lm2','lp1','lp2','vr1','vr2'];
+            timeFields.forEach(f => { document.getElementById(`modal_${f}`).innerHTML = getTimeOptions(); });
+
+            document.getElementById('modal_d').value = formattaDataPerModal(document.getElementsByName(`d_${rowIdx}`)[0].value);
+            timeFields.forEach(f => { document.getElementById(`modal_${f}`).value = document.getElementsByName(`${f}_${rowIdx}`)[0].value; });
+            document.getElementById('modal_p').checked = document.getElementsByName(`p_${rowIdx}`)[0].checked;
+            document.getElementById('modal_c').checked = document.getElementsByName(`c_${rowIdx}`)[0].checked;
+            document.getElementById('modal_h').checked = document.getElementsByName(`h_${rowIdx}`)[0].checked;
+
+            const copyTo = document.getElementById('modal_copy_to');
+            copyTo.innerHTML = '<option value="">-- Non copiare --</option>';
+            for(let i=1; i<=rowCount; i++) {
+                if (i !== rowIdx) {
+                    const name = document.getElementsByName(`tec_${i}`)[0].value || `Riga ${i}`;
+                    copyTo.innerHTML += `<option value="${i}">${name.toUpperCase()}</option>`;
+                }
+            }
+
+            document.getElementById('time-editor-overlay').style.display = 'flex';
+        }
+
+        function chiudiEditorOrari(salva) {
+            if(salva && currentEditRow) {
+                const rowIdx = currentEditRow;
+                const timeFields = ['va1','va2','lm1','lm2','lp1','lp2','vr1','vr2'];
+                
+                document.getElementsByName(`d_${rowIdx}`)[0].value = formattaDataPerTabella(document.getElementById('modal_d').value);
+                timeFields.forEach(f => { document.getElementsByName(`${f}_${rowIdx}`)[0].value = document.getElementById(`modal_${f}`).value; });
+                document.getElementsByName(`p_${rowIdx}`)[0].checked = document.getElementById('modal_p').checked;
+                document.getElementsByName(`c_${rowIdx}`)[0].checked = document.getElementById('modal_c').checked;
+                document.getElementsByName(`h_${rowIdx}`)[0].checked = document.getElementById('modal_h').checked;
+
+                const copyTarget = document.getElementById('modal_copy_to').value;
+                if (copyTarget) {
+                    document.getElementsByName(`d_${copyTarget}`)[0].value = formattaDataPerTabella(document.getElementById('modal_d').value);
+                    timeFields.forEach(f => { document.getElementsByName(`${f}_${copyTarget}`)[0].value = document.getElementById(`modal_${f}`).value; });
+                    document.getElementsByName(`p_${copyTarget}`)[0].checked = document.getElementById('modal_p').checked;
+                    document.getElementsByName(`c_${copyTarget}`)[0].checked = document.getElementById('modal_c').checked;
+                    document.getElementsByName(`h_${copyTarget}`)[0].checked = document.getElementById('modal_h').checked;
+                }
+                
+                calc(); 
+            }
+            document.getElementById('time-editor-overlay').style.display = 'none';
+        }
+
+        function modalAutoFill(el) {
+            const selects = Array.from(document.querySelectorAll('.modal-time-select'));
+            const idx = selects.indexOf(el);
+            if (idx !== -1 && idx < selects.length - 1) {
+                const nextSel = selects[idx + 1];
+                if (nextSel && !nextSel.value) nextSel.value = el.value;
+            }
         }
 
         function addRicambio() {

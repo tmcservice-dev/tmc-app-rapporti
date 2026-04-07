@@ -20,11 +20,10 @@
             .page-a4 { width: 100%; margin: 0; padding: 10px; box-shadow: none; }
         }
 
-        /* FIX PER MULTIPAGINA E TAGLI SECCHI IN PDF */
         body.pdf-mode { background: white !important; }
         body.pdf-mode .page-a4 {
             width: 210mm !important;
-            height: auto !important; /* Sbloccata altezza per multipagina */
+            height: auto !important; 
             min-height: 297mm !important;
             max-width: none !important;
             margin: 0 !important;
@@ -32,7 +31,7 @@
             box-shadow: none !important;
             border: none !important;
             transform: none !important;
-            overflow: visible !important; /* Permette al contenuto di scendere */
+            overflow: visible !important; 
         }
         body.pdf-mode .no-print { display: none !important; }
 
@@ -91,7 +90,6 @@
         .btn-dark { background: #444; }
         .btn-sync { position: absolute; right: 10px; top: 10px; font-size: 20px; background: none; border: none; cursor: pointer; z-index: 10; }
 
-        /* PREVENZIONE TAGLI IN STAMPA NATIVA */
         @media print { 
             body { background: white; }
             .page-a4 { margin: 0; border: none; box-shadow: none; width: 210mm; height: auto; min-height: 297mm; padding: 2mm 8mm; }
@@ -117,6 +115,10 @@
         .modal-time-label { display:block; font-size:11px; font-weight:bold; color:var(--tmc-blue); margin-bottom:3px; }
         .modal-time-group { display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px; background:#f9f9f9; padding:10px; border-radius:5px; border:1px solid #eee; }
         .modal-time-select { width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:4px; outline:none; background:white; font-weight:bold; color:var(--tmc-blue); text-align:center; appearance: none; }
+        
+        /* Modale Selezione Ticket */
+        .ticket-btn { background:#f0f7ff; color:var(--tmc-blue); border:1px solid var(--tmc-blue); padding:10px; text-align:left; border-radius:5px; margin-bottom:8px; width:100%; cursor:pointer; }
+        .ticket-btn:hover { background:var(--tmc-blue); color:white; }
     </style>
 </head>
 <body>
@@ -139,6 +141,15 @@
             <button onclick="salvaBozzaAttuale()" style="background:#ff9800; margin-bottom:15px; font-size:13px; padding:12px;">+ SALVA RAPPORTO ATTUALE</button>
             <div id="lista-bozze" style="margin-bottom: 15px;"></div>
             <button onclick="chiudiBozze()" style="background:#444;">CHIUDI ARCHIVIO</button>
+        </div>
+    </div>
+
+    <div id="select-ticket-overlay" class="overlay-bg" style="display:none;">
+        <div class="modal-box" style="max-height: 80%; overflow-y: auto; padding: 20px;">
+            <h3 style="color:var(--tmc-blue); margin-top:0;">Seleziona Intervento</h3>
+            <p style="font-size: 11px; color: #666; margin-top: 0;">Trovati più interventi per questo tecnico oggi:</p>
+            <div id="lista-ticket-trovati" style="margin-bottom: 15px; display:flex; flex-direction:column;"></div>
+            <button onclick="document.getElementById('select-ticket-overlay').style.display='none';" style="background:#444;">ANNULLA</button>
         </div>
     </div>
 
@@ -217,7 +228,11 @@
 
             <div class="main-title-container">
                 <div style="display:flex; flex-direction:column; gap:2px;">
-                    <span>RAPPORTO INTERVENTO N. <input type="text" id="n_rapporto_input" name="n_rapporto" class="save-data caps" placeholder="XXXX" style="width:70px; font-size:16px; font-weight:bold; color:var(--tmc-blue);"></span>
+                    <span style="display:flex; align-items:center; gap:5px;">
+                        RAPPORTO INTERVENTO N. 
+                        <input type="text" id="n_rapporto_input" name="n_rapporto" class="save-data caps" placeholder="TCK-" style="width:70px; font-size:16px; font-weight:bold; color:var(--tmc-blue);">
+                        <button type="button" class="no-print" onclick="importaDaCalendario('ticket')" style="background:var(--tmc-blue); color:white; border:none; border-radius:4px; padding:3px 8px; font-size:12px; cursor:pointer;" title="Cerca per Ticket">🔍 CERCA</button>
+                    </span>
                     <span style="font-size:9px; color:#666; font-weight:normal;">ID FATTURAZIONE: <input type="text" id="id_univoco_input" name="id_univoco" class="save-data" readonly style="width:130px; font-size:9px; color:#666; border:none; outline:none; background:transparent;" placeholder="In attesa..."></span>
                 </div>
                 <div style="display:flex; gap:8px;">
@@ -228,7 +243,7 @@
             </div>
 
             <div class="card">
-                <button type="button" class="btn-sync no-print" onclick="importaDaCalendario()" title="Sincronizza">🔄</button>
+                <button type="button" class="btn-sync no-print" onclick="importaDaCalendario('tecnico')" title="Sincronizza Tecnico">🔄</button>
                 
                 <div class="grid-header">
                     <div>
@@ -597,47 +612,84 @@
             return true;
         }
 
-        async function importaDaCalendario() {
-            const t1 = document.getElementsByName('tecnico_1')[0].value;
-            if (!t1) return alert("Inserisci un tecnico nel primo campo!");
+        // --- NUOVA LOGICA DI IMPORTAZIONE MULTIPLA E RICERCA TICKET ---
+        async function importaDaCalendario(mode = 'tecnico') {
+            let url = `${APP_SCRIPT_URL}?pin=${encodeURIComponent(localStorage.getItem('tmc_auth_token'))}`;
+            
+            if (mode === 'tecnico') {
+                const t1 = document.getElementsByName('tecnico_1')[0].value;
+                if (!t1) return alert("Inserisci un tecnico nel primo campo per sincronizzare gli appuntamenti di oggi!");
+                url += `&tecnico=${encodeURIComponent(t1)}`;
+            } else if (mode === 'ticket') {
+                const tck = document.getElementById('n_rapporto_input').value;
+                if (!tck) return alert("Scrivi un numero di ticket (es. TCK-1234) nella casella per cercarlo!");
+                url += `&ticket=${encodeURIComponent(tck)}`;
+            }
             
             document.getElementById('loading-overlay').style.display = 'flex';
-            document.getElementById('loading-text').innerText = "Sincronizzazione in corso...";
+            document.getElementById('loading-text').innerText = "Ricerca in corso...";
 
             try {
-                const currentPin = localStorage.getItem('tmc_auth_token');
-                const response = await fetch(`${APP_SCRIPT_URL}?tecnico=${encodeURIComponent(t1)}&pin=${encodeURIComponent(currentPin)}`);
+                const response = await fetch(url);
                 const data = await response.json();
                 
                 document.getElementById('loading-overlay').style.display = 'none';
 
                 if (gestisciErroreServer(data)) return;
 
-                if (data.cliente !== undefined) {
-                    document.getElementById('n_rapporto_input').value = data.tck || "";
-                    document.getElementById('macchina_input').value = (data.matricola || "").toUpperCase();
-                    document.getElementById('descrizione_input').value = (data.problema || "").toUpperCase();
-                    document.getElementById('cliente_input').value = (data.cliente || "").toUpperCase();
-                    document.getElementById('indirizzo_input').value = (data.indirizzo || "").toUpperCase();
-
-                    const container = document.getElementById('lista-tecnici-inputs');
-                    while (container.children.length > 1) { container.removeChild(container.lastChild); }
-                    
-                    if(data.tecnici && data.tecnici.length > 0) {
-                        document.getElementsByName('tecnico_1')[0].value = data.tecnici[0].toUpperCase();
-                        for (let i = 1; i < data.tecnici.length; i++) {
-                            aggiungiRigaTecnico(data.tecnici[i].toUpperCase());
-                        }
+                if (data.results && data.results.length > 0) {
+                    // Se ha trovato 1 solo intervento, lo carica subito
+                    if (data.results.length === 1) {
+                        applicaDatiCalendario(data.results[0]);
+                    } else {
+                        // Se ne ha trovati di più, apre il modale per scegliere
+                        mostraSelezioneTicket(data.results);
                     }
-                    
-                    document.getElementById('id_univoco_input').value = ""; 
-                    generaIdUnivoco();
-                    saveDraft();
-                } else { alert("Nessun evento trovato oggi per questo tecnico."); }
+                } else { 
+                    alert(mode === 'tecnico' ? "Nessun evento trovato OGGI per questo tecnico." : "Nessun evento trovato per questo Ticket."); 
+                }
             } catch (e) { 
                 document.getElementById('loading-overlay').style.display = 'none';
                 alert("Errore connessione."); 
             }
+        }
+
+        function mostraSelezioneTicket(results) {
+            const container = document.getElementById('lista-ticket-trovati');
+            container.innerHTML = "";
+            results.forEach((res) => {
+                const btn = document.createElement('button');
+                btn.className = 'ticket-btn';
+                btn.innerHTML = `<b>${res.tck || 'Senza TCK'}</b> - ${res.cliente || 'Senza Cliente'}<br><span style="font-size:10px; color:#666;">${res.problema || ''}</span>`;
+                btn.onclick = () => {
+                    document.getElementById('select-ticket-overlay').style.display = 'none';
+                    applicaDatiCalendario(res);
+                };
+                container.appendChild(btn);
+            });
+            document.getElementById('select-ticket-overlay').style.display = 'flex';
+        }
+
+        function applicaDatiCalendario(data) {
+            document.getElementById('n_rapporto_input').value = data.tck || "";
+            document.getElementById('macchina_input').value = (data.matricola || "").toUpperCase();
+            document.getElementById('descrizione_input').value = (data.problema || "").toUpperCase();
+            document.getElementById('cliente_input').value = (data.cliente || "").toUpperCase();
+            document.getElementById('indirizzo_input').value = (data.indirizzo || "").toUpperCase();
+
+            const container = document.getElementById('lista-tecnici-inputs');
+            while (container.children.length > 1) { container.removeChild(container.lastChild); }
+            
+            if(data.tecnici && data.tecnici.length > 0) {
+                document.getElementsByName('tecnico_1')[0].value = data.tecnici[0].toUpperCase();
+                for (let i = 1; i < data.tecnici.length; i++) {
+                    aggiungiRigaTecnico(data.tecnici[i].toUpperCase());
+                }
+            }
+            
+            document.getElementById('id_univoco_input').value = ""; 
+            generaIdUnivoco();
+            saveDraft();
         }
 
         function preparaSchermoPerPDF() {
@@ -708,7 +760,6 @@
             const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
             const fileName = `Rapporto_${idUnivoco}_${nomeCliente}.pdf`.replace(/ /g, "_");
 
-            // --- NUOVA LOGICA MATERIALI (CON DESCRIZIONE) ---
             let matString = "";
             for(let i=1; i<=ricCount; i++) {
                 let c = document.getElementsByName(`rc_${i}`)[0]?.value || "";
@@ -722,7 +773,6 @@
                     matString += `- ${q}x ${descParts.join(' - ')}\n`;
                 }
             }
-            // -----------------------------------------------
 
             let l_ore = document.getElementById('tot_lavoro_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';
             let v_ore = document.getElementById('tot_viaggio_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';

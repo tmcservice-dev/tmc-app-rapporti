@@ -15,28 +15,32 @@
             display: flex; flex-direction: column; position: relative;
         }
 
+        /* Responsive per schermi piccoli (mobile) */
         @media screen and (max-width: 210mm) {
             body { background: white; }
             .page-a4 { width: 100%; margin: 0; padding: 10px; box-shadow: none; }
         }
 
+        /* Stile speciale per la generazione PDF */
         body.pdf-mode { background: white !important; }
         body.pdf-mode .page-a4 {
             width: 210mm !important;
-            height: auto !important; 
-            min-height: 297mm !important;
+            height: 297mm !important; 
             max-width: none !important;
+            min-height: auto !important;
             margin: 0 !important;
             padding: 2mm 8mm !important;
             box-shadow: none !important;
             border: none !important;
             transform: none !important;
-            overflow: visible !important; 
+            overflow: hidden !important;
         }
         body.pdf-mode .no-print { display: none !important; }
 
+        /* Elementi Intestazione/Piede statici */
         .banner-static { width: 100%; display: block; }
         
+        /* Titolo Principale e Tipo Intervento */
         .main-title-container { 
             display: flex; justify-content: space-between; align-items: center; 
             color: var(--tmc-blue); font-weight: bold; border-top: 2px solid var(--tmc-blue); 
@@ -46,343 +50,213 @@
         .tipo-box { border: 2px solid var(--tmc-blue); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; }
         .tipo-box.active { background: var(--tmc-blue); color: white; }
 
+        /* Card Anagrafica */
         .card { border: 1px solid var(--tmc-blue); padding: 6px 10px; margin-bottom: 6px; border-radius: 5px; position: relative; }
         .grid-header { display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; }
         
         .input-field label { font-size: 8px; font-weight: bold; color: var(--tmc-blue); display: block; text-transform: uppercase; margin-bottom: 2px; }
         
+        /* Input generici (editabili) */
         input, textarea, select { border: none; border-bottom: 1px solid #cce0f5; padding: 4px 0; font-size: 12px; outline: none; width: 100%; background: transparent; }
         .caps { text-transform: uppercase; }
 
+        /* NUOVO STILE PER INPUT ORA NATIIVO (CLOCK PICKER SUL MOBILE) */
+        input[type="time"] { 
+            font-size: 11px; 
+            text-align: center; 
+            color: var(--tmc-blue); 
+            font-weight: bold; 
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        /* Rimuovi icona orologio predefinita su alcuni browser per pulizia */
+        input[type="time"]::-webkit-calendar-picker-indicator,
+        input[type="time"]::-webkit-inner-spin-button {
+            display: none;
+            -webkit-appearance: none;
+        }
+
+        /* Combo Tecnico (Input testo sovrapposto a Select) */
         .tecnico-combo { position: relative; width: 100%; height: 25px; }
         .tecnico-input-main { position: absolute; top: 0; left: 0; width: calc(100% - 25px); border-bottom: 1px solid #cce0f5; z-index: 2; background: white; text-transform: uppercase; }
         .tecnico-select-bg { width: 100%; position: relative; z-index: 1; }
 
+        /* Tabelle Ore e Ricambi */
         table { width: 100%; border-collapse: collapse; border: 1px solid var(--tmc-blue); margin-top: 5px; }
         th { background: var(--tmc-light-blue); font-size: 7px; border: 1px solid var(--tmc-blue); padding: 5px 2px; color: var(--tmc-blue); }
         td { border: 1px solid var(--tmc-blue); padding: 3px 1px; text-align: center; }
         
-        .time-select { 
-            font-size: 11px; font-weight: bold; color: var(--tmc-blue); background: transparent; border: 1px solid transparent; 
-            width: 100%; height: 26px; border-radius: 3px; 
-            text-align: center; margin: 0; padding: 0; outline: none;
-        }
-
+        /* Checkbox PCH */
         .pch-row { display: flex; justify-content: center; gap: 3px; font-size: 9px; font-weight: bold; align-items: center; }
         .pch-row input { width: auto; margin: 0; }
 
+        /* Layout Inferiore (Note e Firma) */
         .bottom-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 15px; margin-top: auto; padding-top: 5px; }
         .dotted-line { border-bottom: 1px dotted var(--tmc-blue); height: 18px; margin-bottom: 5px; }
         
+        /* Firma Preview */
         .sig-preview { border: 2px dashed var(--tmc-blue); width: 100%; height: 120px; background: #f9f9f9; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 5px; box-sizing: border-box; }
         .sig-preview img { width: 100%; height: 100%; object-fit: contain; }
 
+        /* Overlay Firma a schermo intero */
         #signature-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:white; z-index: 9999; flex-direction: column; }
         #canvas-fullscreen { flex-grow: 1; border: 3px solid var(--tmc-blue); margin: 15px; background: #fafafa; touch-action: none; }
 
         .footer-static { width: 66%; display: block; margin: 5px auto; }
         
+        /* Pulsantiera di controllo (Nascondi in stampa) */
         .no-print { display: flex; flex-wrap: wrap; gap: 10px; padding: 15px; max-width: 210mm; margin: 0 auto; justify-content: center; }
         .btn { flex: 1; min-width: 90px; padding: 12px 5px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; font-size: 11px; text-align: center; }
         .btn-blue { background: var(--tmc-blue); }
         .btn-green { background: #25D366; } 
         .btn-orange { background: #ff9800; } 
-        .btn-dark { background: #444; }
         .btn-sync { position: absolute; right: 10px; top: 10px; font-size: 20px; background: none; border: none; cursor: pointer; z-index: 10; }
 
-        @media print { 
-            body { background: white; }
-            .page-a4 { margin: 0; border: none; box-shadow: none; width: 210mm; height: auto; min-height: 297mm; padding: 2mm 8mm; }
-            .no-print, .btn-sync { display: none !important; } 
-            .card, tr, .bottom-grid, .main-title-container { page-break-inside: avoid; break-inside: avoid; }
-        }
-        
-        #loading-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; color: white; flex-direction: column; justify-content: center; align-items: center; font-family: sans-serif; font-weight: bold; text-align: center; padding: 20px;}
-        .spinner { border: 6px solid #f3f3f3; border-top: 6px solid var(--tmc-blue); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Stili Login e Modali */
-        .overlay-bg { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(82, 86, 89, 0.95); z-index: 99999; flex-direction: column; justify-content: center; align-items: center; }
-        .modal-box { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: center; color: var(--tmc-dark); width: 80%; max-width: 350px; }
-        .modal-box input { border: 2px solid var(--tmc-blue); padding: 12px; margin: 20px 0; width: calc(100% - 24px); font-size: 18px; text-align: center; border-radius: 5px; outline: none; }
-        .modal-box button { background: var(--tmc-blue); color: white; border: none; padding: 15px; font-size: 16px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; }
-        
-        /* Modale Bozze */
-        #drafts-overlay { z-index: 99998; }
-        .draft-item { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding:12px 0; text-align:left; }
-
-        /* Modale Orari */
-        .modal-time-label { display:block; font-size:11px; font-weight:bold; color:var(--tmc-blue); margin-bottom:3px; }
-        .modal-time-group { display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px; background:#f9f9f9; padding:10px; border-radius:5px; border:1px solid #eee; }
-        .modal-time-select { width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:4px; outline:none; background:white; font-weight:bold; color:var(--tmc-blue); text-align:center; appearance: none; }
-        
-        /* Modale Selezione Ticket */
-        .ticket-btn { background:#f0f7ff; color:var(--tmc-blue); border:1px solid var(--tmc-blue); padding:10px; text-align:left; border-radius:5px; margin-bottom:8px; width:100%; cursor:pointer; }
-        .ticket-btn:hover { background:var(--tmc-blue); color:white; }
+        @media print { .no-print, .btn-sync { display: none !important; } }
     </style>
 </head>
 <body>
 
-    <div id="login-overlay" class="overlay-bg">
-        <div class="modal-box">
-            <img src="static/intestazione.jpg" style="width: 100%; margin-bottom: 10px;">
-            <h3 style="color:var(--tmc-blue); margin-bottom: 5px;">Accesso Riservato</h3>
-            <p style="font-size: 12px; color: #666; margin-top: 0;">Inserisci la password aziendale</p>
-            <input type="password" id="pin_input" placeholder="Password">
-            <button id="btn-login" onclick="verificaLogin()">ACCEDI</button>
-            <p id="login-error" style="color:red; font-size:13px; display:none; margin-top:15px; font-weight:bold;">Password errata. Riprova.</p>
-        </div>
-    </div>
+    <div class="page-a4" id="rapporto-foglio">
+        <img src="static/intestazione.jpg" class="banner-static">
 
-    <div id="drafts-overlay" class="overlay-bg" style="display:none;">
-        <div class="modal-box" style="max-height: 80%; overflow-y: auto; padding: 20px;">
-            <h3 style="color:var(--tmc-blue); margin-top:0;">Archivio Bozze</h3>
-            <p style="font-size: 11px; color: #666; margin-top: 0;">Salva i lavori in sospeso per completarli dopo.</p>
-            <button onclick="salvaBozzaAttuale()" style="background:#ff9800; margin-bottom:15px; font-size:13px; padding:12px;">+ SALVA RAPPORTO ATTUALE</button>
-            <div id="lista-bozze" style="margin-bottom: 15px;"></div>
-            <button onclick="chiudiBozze()" style="background:#444;">CHIUDI ARCHIVIO</button>
-        </div>
-    </div>
-
-    <div id="select-ticket-overlay" class="overlay-bg" style="display:none;">
-        <div class="modal-box" style="max-height: 80%; overflow-y: auto; padding: 20px;">
-            <h3 style="color:var(--tmc-blue); margin-top:0;">Seleziona Intervento</h3>
-            <p style="font-size: 11px; color: #666; margin-top: 0;">Trovati più interventi per questo tecnico oggi:</p>
-            <div id="lista-ticket-trovati" style="margin-bottom: 15px; display:flex; flex-direction:column;"></div>
-            <button onclick="document.getElementById('select-ticket-overlay').style.display='none';" style="background:#444;">ANNULLA</button>
-        </div>
-    </div>
-
-    <div id="text-editor-overlay" class="overlay-bg" style="display:none; padding: 20px; box-sizing: border-box; z-index: 99999;">
-        <div style="background:white; width:100%; max-width: 600px; height:80%; border-radius:8px; display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-            <div style="padding:15px; background:var(--tmc-blue); color:white; text-align:center;">
-                <b style="font-size:16px;">PROBLEMA SEGNALATO / LAVORO ESEGUITO</b>
-            </div>
-            <textarea id="editor_fullscreen" class="caps" style="flex:1; width:100%; border:none; padding:15px; font-size:16px; outline:none; resize:none; box-sizing:border-box;" placeholder="Scrivi qui tutti i dettagli..."></textarea>
-            <div style="padding:15px; display:flex; gap:10px; background:#f9f9f9; border-top:1px solid #ddd;">
-                <button onclick="chiudiEditorTesto(false)" style="flex:1; padding:15px; background:#eee; color:#333; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">ANNULLA</button>
-                <button onclick="chiudiEditorTesto(true)" style="flex:1; padding:15px; background:#25D366; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">CONFERMA E SALVA</button>
+        <div class="main-title-container">
+            <span>RAPPORTO INTERVENTO N. <input type="text" name="n_rapporto" class="save-data caps" placeholder="XXXX" style="width:70px; font-size:16px; font-weight:bold; color:var(--tmc-blue);"></span>
+            <div style="display:flex; gap:8px;">
+                <div id="box-G" class="tipo-box" onclick="setTipo('G')">GRATUITO</div>
+                <div id="box-P" class="tipo-box" onclick="setTipo('P')">PAGAMENTO</div>
+                <input type="hidden" name="tipo_int" id="tipo_int_hidden" class="save-data" value="P">
             </div>
         </div>
-    </div>
 
-    <div id="time-editor-overlay" class="overlay-bg" style="display:none; padding: 10px; box-sizing: border-box; z-index: 99999;">
-        <div style="background:white; width:100%; max-width: 450px; max-height:95%; border-radius:8px; display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-            <div style="padding:15px; background:var(--tmc-blue); color:white; text-align:center;">
-                <b id="modal_time_title" style="font-size:16px;">COMPILA ORARI</b>
-            </div>
-            <div style="padding:15px; overflow-y:auto; flex:1;">
-                
-                <span class="modal-time-label">DATA INTERVENTO</span>
-                <input type="date" id="modal_d" style="width:100%; padding:12px; font-size:16px; margin-bottom:15px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box; color:var(--tmc-blue); font-weight:bold;">
-                
-                <span class="modal-time-label">VIAGGIO (Andata)</span>
-                <div class="modal-time-group">
-                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">Da</div><select id="modal_va1" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
-                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">A</div><select id="modal_va2" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
-                </div>
-
-                <span class="modal-time-label">LAVORO (Mattina)</span>
-                <div class="modal-time-group">
-                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">Da</div><select id="modal_lm1" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
-                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">A</div><select id="modal_lm2" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
-                </div>
-
-                <span class="modal-time-label">LAVORO (Pomeriggio)</span>
-                <div class="modal-time-group">
-                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">Da</div><select id="modal_lp1" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
-                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">A</div><select id="modal_lp2" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
-                </div>
-
-                <span class="modal-time-label">VIAGGIO (Ritorno)</span>
-                <div class="modal-time-group">
-                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">Da</div><select id="modal_vr1" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
-                    <div><div style="font-size:10px; color:#666; margin-bottom:2px;">A</div><select id="modal_vr2" class="modal-time-select" onchange="modalAutoFill(this)"></select></div>
-                </div>
-
-                <span class="modal-time-label">PASTI E PERNOTTAMENTO</span>
-                <div style="display:flex; justify-content:space-around; background:#f0f7ff; padding:15px; border-radius:5px; border:1px solid #cce0f5; margin-bottom:20px;">
-                    <label style="font-size:14px; font-weight:bold; color:var(--tmc-blue); display:flex; align-items:center; gap:5px;"><input type="checkbox" id="modal_p" style="width:25px; height:25px;"> Pranzo</label>
-                    <label style="font-size:14px; font-weight:bold; color:var(--tmc-blue); display:flex; align-items:center; gap:5px;"><input type="checkbox" id="modal_c" style="width:25px; height:25px;"> Cena</label>
-                    <label style="font-size:14px; font-weight:bold; color:var(--tmc-blue); display:flex; align-items:center; gap:5px;"><input type="checkbox" id="modal_h" style="width:25px; height:25px;"> Hotel</label>
-                </div>
-
-                <div style="background:#fff3e0; padding:15px; border-radius:5px; border:1px solid #ffcc80;">
-                    <b style="color:#e65100; font-size:12px; display:block; margin-bottom:5px;">COPIA ORARI SU ALTRO TECNICO:</b>
-                    <select id="modal_copy_to" style="width:100%; padding:12px; font-size:14px; border:1px solid #ffb74d; border-radius:4px; outline:none; font-weight:bold;">
-                        <option value="">-- Non copiare --</option>
-                    </select>
-                </div>
-
-            </div>
-            <div style="display:flex; gap:1px; background:#ddd;">
-                <button onclick="chiudiEditorOrari(false)" style="flex:1; padding:15px; background:#eee; color:#333; border:none; font-weight:bold; cursor:pointer;">ANNULLA</button>
-                <button onclick="chiudiEditorOrari(true)" style="flex:1; padding:15px; background:#25D366; color:white; border:none; font-weight:bold; cursor:pointer;">CONFERMA</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="app-content" style="display:none;">
-        <div class="page-a4" id="rapporto-foglio">
-            <img src="static/intestazione.jpg" class="banner-static">
-
-            <div class="main-title-container">
-                <div style="display:flex; flex-direction:column; gap:2px;">
-                    <span style="display:flex; align-items:center; gap:5px;">
-                        RAPPORTO INTERVENTO N. 
-                        <input type="text" id="n_rapporto_input" name="n_rapporto" class="save-data caps" placeholder="TCK-" style="width:70px; font-size:16px; font-weight:bold; color:var(--tmc-blue);">
-                        <button type="button" class="no-print" onclick="importaDaCalendario('ticket')" style="background:var(--tmc-blue); color:white; border:none; border-radius:4px; padding:3px 8px; font-size:12px; cursor:pointer;" title="Cerca per Ticket">🔍 CERCA</button>
-                    </span>
-                    <span style="font-size:9px; color:#666; font-weight:normal;">ID FATTURAZIONE: <input type="text" id="id_univoco_input" name="id_univoco" class="save-data" readonly style="width:130px; font-size:9px; color:#666; border:none; outline:none; background:transparent;" placeholder="In attesa..."></span>
-                </div>
-                <div style="display:flex; gap:8px;">
-                    <div id="box-G" class="tipo-box" onclick="setTipo('G')">GRATUITO</div>
-                    <div id="box-P" class="tipo-box" onclick="setTipo('P')">PAGAMENTO</div>
-                    <input type="hidden" name="tipo_int" id="tipo_int_hidden" class="save-data" value="P">
-                </div>
-            </div>
-
-            <div class="card">
-                <button type="button" class="btn-sync no-print" onclick="importaDaCalendario('tecnico')" title="Sincronizza Tecnico">🔄</button>
-                
-                <div class="grid-header">
-                    <div>
-                        <div class="input-field" style="margin-bottom:10px;">
-                            <label>Tecnico/i Incaricato/i</label>
-                            <div id="lista-tecnici-inputs">
-                                <div class="tecnico-riga" style="display:flex; gap:5px; margin-top:5px;">
-                                    <div class="tecnico-combo" style="flex:1;">
-                                        <input type="text" name="tecnico_1" class="save-data tecnico-input-main caps" placeholder="Scrivi o seleziona...">
-                                        <select class="tecnico-select-bg" onchange="this.previousElementSibling.value=this.value; saveDraft();">
-                                            <option value=""></option>
-                                            <option value="CARINI MARCO">CARINI MARCO</option>
-                                            <option value="LIVIU CIORICI">LIVIU CIORICI</option>
-                                            <option value="MARIN CIORESCU">MARIN CIORESCU</option>
-                                            <option value="ATTILIO MASERATI">ATTILIO MASERATI</option>
-                                            <option value="POLLEDRI RICCARDO">POLLEDRI RICCARDO</option>
-                                            <option value="GAZZOLA MASSIMO">GAZZOLA MASSIMO</option>
-                                            <option value="BRAGHIERI STEFANO">BRAGHIERI STEFANO</option>
-                                            <option value="COROLI LORENZO">COROLI LORENZO</option>
-                                            <option value="CREMONESI NICOLA">CREMONESI NICOLA</option>
-                                            <option value="MARLIERI GIUSEPPE">MARLIERI GIUSEPPE</option>
-                                            <option value="MARZAROLI EMILIO">MARZAROLI EMILIO</option>
-                                            <option value="PICCOLI GIULIANO">PICCOLI GIULIANO</option>
-                                            <option value="IVAN ISOPESCU">IVAN ISOPESCU</option>
-                                            <option value="MAZZOCCHI MIRCO">MAZZOCCHI MIRCO</option>
-                                            <option value="MOIA LUIGI">MOIA LUIGI</option>
-                                        </select>
-                                    </div>
+        <div class="card">
+          <button type="button" class="btn-sync no-print" onclick="importaDaCalendario()" title="Sincronizza">🔄</button>
+          
+            <div class="grid-header">
+                <div>
+                    <div class="input-field" style="margin-bottom:10px;">
+                        <label>Tecnico/i Incaricato/i</label>
+                        <div id="lista-tecnici-inputs">
+                            <div class="tecnico-riga" style="display:flex; gap:5px; margin-top:5px;">
+                                <div class="tecnico-combo" style="flex:1;">
+                                    <input type="text" name="tecnico_1" class="save-data tecnico-input-main caps" placeholder="Scrivi o seleziona...">
+                                    <select class="tecnico-select-bg" onchange="this.previousElementSibling.value=this.value; saveDraft();">
+                                        <option value=""></option>
+                                        <option value="CARINI MARCO">CARINI MARCO</option>
+                                        <option value="LIVIU CIORICI">LIVIU CIORICI</option>
+                                        <option value="MARIN CIORESCU">MARIN CIORESCU</option>
+                                        <option value="ATTILIO MASERATI">ATTILIO MASERATI</option>
+                                        <option value="POLLEDRI RICCARDO">POLLEDRI RICCARDO</option>
+                                        <option value="GAZZOLA MASSIMO">GAZZOLA MASSIMO</option>
+                                        <option value="BRAGHIERI STEFANO">BRAGHIERI STEFANO</option>
+                                        <option value="COROLI LORENZO">COROLI LORENZO</option>
+                                        <option value="CREMONESI NICOLA">CREMONESI NICOLA</option>
+                                        <option value="MARLIERI GIUSEPPE">MARLIERI GIUSEPPE</option>
+                                        <option value="MARZAROLI EMILIO">MARZAROLI EMILIO</option>
+                                        <option value="PICCOLI GIULIANO">PICCOLI GIULIANO</option>
+                                        <option value="IVAN ISOPESCU">IVAN ISOPESCU</option>
+                                        <option value="MAZZOCCHI MIRCO">MAZZOCCHI MIRCO</option>
+                                        <option value="MOIA LUIGI">MOIA LUIGI</option>
+                                    </select>
                                 </div>
                             </div>
-                            <button type="button" class="no-print" onclick="aggiungiRigaTecnico()" style="font-size:8px; margin-top:5px; border:1px solid #ccc; background:#fff; cursor:pointer;">+ AGGIUNGI TECNICO</button>
                         </div>
-
-                        <div class="input-field">
-                            <label>Mezzo di Trasporto</label>
-                            <select name="mezzo_trasporto" class="save-data">
-                                <option value="MEZZO AZIENDALE">MEZZO AZIENDALE</option>
-                                <option value="MEZZO PROPRIO">MEZZO PROPRIO</option>
-                            </select>
-                        </div>
+                        <button type="button" class="no-print" onclick="aggiungiRigaTecnico()" style="font-size:8px; margin-top:5px; border:1px solid #ccc; background:#fff; cursor:pointer;">+ AGGIUNGI TECNICO</button>
                     </div>
 
-                    <div style="border-left: 1px solid #eee; padding-left: 20px;">
-                        <div class="input-field" style="margin-bottom:12px;">
-                            <label>Cliente</label>
-                            <input type="text" id="cliente_input" name="cliente" class="save-data caps" style="font-size:14px; font-weight:bold;">
+                    <div class="input-field">
+                        <label>Mezzo di Trasporto</label>
+                        <select name="mezzo_trasporto" class="save-data">
+                            <option value="MEZZO AZIENDALE">MEZZO AZIENDALE</option>
+                            <option value="MEZZO PROPRIO">MEZZO PROPRIO</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="border-left: 1px solid #eee; padding-left: 20px;">
+                    <div class="input-field" style="margin-bottom:12px;">
+                        <label>Cliente</label>
+                        <input type="text" name="cliente" class="save-data caps" style="font-size:14px; font-weight:bold;">
+                    </div>
+                    <div class="input-field" style="margin-bottom:12px;">
+                        <label>Sede Intervento</label>
+                        <input type="text" name="indirizzo" class="save-data caps">
+                    </div>
+                    
+                    <div style="display:flex; gap:10px;">
+                        <div class="input-field" style="flex:1;">
+                            <label>Macchina / Matr.</label>
+                            <input type="text" name="macchina" class="save-data caps">
                         </div>
-                        <div class="input-field" style="margin-bottom:12px;">
-                            <label>Sede Intervento</label>
-                            <textarea id="indirizzo_input" name="indirizzo" class="save-data caps" rows="2" style="font-family: inherit; resize: none; overflow: hidden; padding: 2px 0;"></textarea>
-                        </div>
-                        
-                        <div style="display:flex; gap:10px;">
-                            <div class="input-field" style="flex:1;">
-                                <label>Macchina / Matr.</label>
-                                <input type="text" id="macchina_input" name="macchina" class="save-data caps">
-                            </div>
-                            <div class="input-field" style="flex:1;">
-                                <label>Email Cliente</label>
-                                <input type="email" id="email_input" name="email_cliente" class="save-data" placeholder="nome@email.it" style="text-transform:none;">
-                            </div>
+                        <div class="input-field" style="flex:1;">
+                            <label>Email Cliente</label>
+                            <input type="email" name="email_cliente" class="save-data" placeholder="nome@email.it" style="text-transform:none;">
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th rowspan="2" style="width: 14%;">DATA</th>
-                        <th rowspan="2" style="width: 10%;">TECNICO</th>
-                        <th colspan="2">VIAGGIO (A)</th><th colspan="2">LAVORO (M)</th><th colspan="2">LAVORO (P)</th><th colspan="2">VIAGGIO (R)</th>
-                        <th rowspan="2" style="width: 8%;">P / C / H</th>
-                    </tr>
-                    <tr style="font-size:5px;"><th>DA</th><th>A</th><th>DA</th><th>A</th><th>DA</th><th>A</th><th>DA</th><th>A</th></tr>
-                </thead>
-                <tbody id="table-body"></tbody>
-            </table>
-            
-            <p class="no-print" style="text-align:center; font-size:9px; color:#666; margin-top:2px;">👆 Tocca la data o gli orari nella tabella per aprire l'inserimento rapido</p>
+        <table>
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 14%;">DATA</th>
+                    <th rowspan="2" style="width: 10%;">TECNICO</th>
+                    <th colspan="2">VIAGGIO (A)</th><th colspan="2">LAVORO (M)</th><th colspan="2">LAVORO (P)</th><th colspan="2">VIAGGIO (R)</th>
+                    <th rowspan="2" style="width: 8%;">P / C / H</th>
+                </tr>
+                <tr style="font-size:5px;"><th>DA</th><th>A</th><th>DA</th><th>A</th><th>DA</th><th>A</th><th>DA</th><th>A</th></tr>
+            </thead>
+            <tbody id="table-body">
+                </tbody>
+        </table>
 
-            <div class="card" style="margin-top:10px;">
-                <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <label style="color:var(--tmc-blue); font-weight:bold; margin:0;">PROBLEMA SEGNALATO / LAVORO ESEGUITO</label>
-                    <button type="button" class="no-print" onclick="apriEditorTesto()" style="background:var(--tmc-light-blue); color:var(--tmc-blue); border:1px solid var(--tmc-blue); border-radius:3px; font-size:9px; padding:3px 8px; font-weight:bold; cursor:pointer;">⛶ ESPANDI</button>
-                </div>
-                <textarea id="descrizione_input" name="descrizione" class="save-data caps" rows="3" style="margin-top:5px;"></textarea>
-                <div id="descrizione_print" class="caps" style="display:none; white-space: pre-wrap; word-break: break-word; font-size: 12px; min-height: 45px; border-bottom: 1px solid #cce0f5; padding: 4px 0;"></div>
-            </div>
+        <div class="card" style="margin-top:10px;">
+            <label style="color:var(--tmc-blue); font-weight:bold;">PROBLEMA SEGNALATO / LAVORO ESEGUITO</label>
+            <textarea name="descrizione" class="save-data caps" rows="3" style="margin-top:5px;"></textarea>
+        </div>
 
-            <table>
-                <thead><tr><th>CODICE</th><th>RICAMBIO</th><th style="width:10%">Q.TÀ</th><th style="width:15%">UNIT. €</th><th style="width:15%">TOT. €</th></tr></thead>
-                <tbody id="ricambi-body"></tbody>
-                <tfoot><tr><td colspan="4" style="text-align:right; font-weight:bold; padding-right:5px;">TOTALE MATERIALI:</td><td id="gran-totale" style="font-weight:bold; color:var(--tmc-blue);">0.00 €</td></tr></tfoot>
-            </table>
+        <table>
+            <thead><tr><th>CODICE</th><th>RICAMBIO</th><th style="width:10%">Q.TÀ</th><th style="width:15%">UNIT. €</th><th style="width:15%">TOT. €</th></tr></thead>
+            <tbody id="ricambi-body"></tbody>
+            <tfoot><tr><td colspan="4" style="text-align:right; font-weight:bold; padding-right:5px;">TOTALE MATERIALI:</td><td id="gran-totale" style="font-weight:bold; color:var(--tmc-blue);">0.00 €</td></tr></tfoot>
+        </table>
 
-            <div class="bottom-grid">
-                <div class="notes-box card" style="margin:0;">
-                    <label>NOTE / RIEPILOGO SPESE</label>
-                    <div style="font-size:7px;">
-                        PRESTAZIONE: <span id="tot_lavoro_span" style="color:var(--tmc-blue); font-weight:bold; font-size:8px;"></span>
-                        <div class="dotted-line"></div>
-                    </div>
-                    <div style="font-size:7px;">
-                        VIAGGIO: <span id="tot_viaggio_span" style="color:var(--tmc-blue); font-weight:bold; font-size:8px;"></span>
-                        <div class="dotted-line"></div>
-                    </div>
-                    <div style="font-size:7px;">
-                        TRASFERTA / ALTRO: <span id="tot_pch_span" style="color:var(--tmc-blue); font-weight:bold; font-size:8px;"></span>
-                        <div class="dotted-line"></div><div class="dotted-line"></div>
-                    </div>
-                </div>
+        <div class="bottom-grid">
+            <div class="notes-box card" style="margin:0;">
+                <label>NOTE / RIEPILOGO SPESE</label>
+                <input type="text" name="note_spese_1" class="save-data" placeholder="Scrivi qui eventuali note prestazione..." style="margin-bottom:8px; font-size:9px;">
+                <input type="text" name="note_spese_2" class="save-data" placeholder="Scrivi qui eventuali note viaggio..." style="margin-bottom:8px; font-size:9px;">
                 
-                <div class="sig-box" style="display:flex; flex-direction:column; justify-content:flex-end;">
-                    <div class="input-field" style="margin-bottom: 5px;">
-                        <label style="color:var(--tmc-blue); font-weight:bold; font-size:8px;">RESPONSABILE (NOME E COGNOME)</label>
-                        <input type="text" name="nome_responsabile" class="save-data caps" placeholder="Es. Mario Rossi" style="font-size:12px; font-weight:bold; border-bottom: 1px solid var(--tmc-blue); text-align:center;">
-                    </div>
-                    <label style="color:var(--tmc-blue); font-weight:bold; font-size:8px;">FIRMA CLIENTE (TOCCA PER FIRMARE)</label>
-                    <div id="firma-preview" class="sig-preview" onclick="openSignature()">
-                        <span id="placeholder-firma" style="color:#aaa; font-size:10px; text-align:center;">Firma a schermo intero</span>
-                        <img id="sig-image" src="" style="display:none;">
-                    </div>
+                <div style="font-size:7px;">
+                    Totale Ore Calcolate: <span id="tot_lavoro_span" style="color:var(--tmc-blue); font-weight:bold; font-size:8px;"></span> 
+                    (V: <span id="tot_viaggio_span" style="color:var(--tmc-blue); font-weight:bold; font-size:8px;"></span>)
+                    <div class="dotted-line"></div>
                 </div>
             </div>
-
-            <img src="static/piede.jpg" class="footer-static">
+            
+            <div class="sig-box">
+                <div class="input-field" style="margin-bottom: 5px;">
+                    <label style="color:var(--tmc-blue); font-weight:bold; font-size:8px;">RESPONSABILE (NOME E COGNOME)</label>
+                    <input type="text" name="nome_responsabile" class="save-data caps" placeholder="Es. Mario Rossi" style="font-size:12px; font-weight:bold; border-bottom: 1px solid var(--tmc-blue); text-align:center;">
+                </div>
+                <label style="color:var(--tmc-blue); font-weight:bold; font-size:8px;">FIRMA CLIENTE (TOCCA PER FIRMARE)</label>
+                <div id="firma-preview" class="sig-preview" onclick="openSignature()">
+                    <span id="placeholder-firma" style="color:#aaa; font-size:10px; text-align:center;">Firma a schermo intero</span>
+                    <img id="sig-image" src="" style="display:none;">
+                </div>
+            </div>
         </div>
 
-        <div class="no-print">
-            <button class="btn btn-dark" onclick="addRow()">+ GIORNO/TECNICO</button>
-            <button class="btn btn-dark" onclick="addRicambio()">+ RICAMBIO</button>
-            <button class="btn btn-orange" style="background:#ff9800; min-width:100%;" onclick="apriBozze()">📂 ARCHIVIO BOZZE</button>
-            <button class="btn btn-blue" onclick="window.print()">SALVA PDF</button>
-            <button class="btn btn-green" onclick="condividiWhatsApp()">WHATSAPP</button>
-            <button class="btn btn-orange" style="background:#e91e63;" onclick="inviaEmailAutomaticamente()">INVIA EMAIL</button>
-            <button class="btn" style="background:red;" onclick="nuovoRapporto()">RESET NUOVO</button>
-            <button class="btn btn-dark" style="min-width: 100%; margin-top: 10px;" onclick="esciApp()">🔒 ESCI E RIMUOVI AUTORIZZAZIONE</button>
-        </div>
+        <img src="static/piede.jpg" class="footer-static">
+    </div>
+
+    <div class="no-print">
+        <button class="btn btn-dark" onclick="addRow()">+ GIORNO/TECNICO</button>
+        <button class="btn btn-dark" onclick="addRicambio()">+ RICAMBIO</button>
+        <button class="btn btn-blue" onclick="window.print()">SALVA PDF</button>
+        <button class="btn btn-green" onclick="condividiWhatsApp()">WHATSAPP</button>
+        <button class="btn" style="background:red;" onclick="nuovoRapporto()">RESET NUOVO</button>
     </div>
 
     <div id="signature-overlay">
@@ -397,169 +271,41 @@
         </div>
     </div>
     
-    <div id="loading-overlay">
-        <div class="spinner"></div>
-        <div id="loading-text">Attendere...</div>
+    <div id="loading-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: sans-serif; font-weight: bold; text-align: center; padding: 20px;">
+        <div class="spinner" style="border: 6px solid #f3f3f3; border-top: 6px solid var(--tmc-blue); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
+        <div id="loading-text">Sincronizzazione in corso...<br>Attendere.</div>
     </div>
+    <style> @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } } </style>
 
     <script>
-        const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxh6R-LKwzIsbzNgTyf41AZTs3fxd_CqTE2bLQLQFcx7mwpb-ueqOARluwFPQFW47jM/exec";
-        
-        async function verificaLogin() {
-            const input = document.getElementById('pin_input').value.toUpperCase().trim();
-            const btn = document.getElementById('btn-login');
-            if(!input) return;
+        // --- CONFIGURAZIONE ---
+        // Sostituisci con l'URL generato da Google Apps Script dopo il deploy
+        const APP_SCRIPT_URL = "URL_IL_TUO_GOOGLE_APPS_SCRIPT";
+        // ----------------------
 
-            btn.innerText = "VERIFICA IN CORSO...";
-            document.getElementById('login-error').style.display = 'none';
-
-            try {
-                const response = await fetch(`${APP_SCRIPT_URL}?action=check_pin&pin=${encodeURIComponent(input)}`);
-                const data = await response.json();
-                
-                if(data.success) {
-                    localStorage.setItem('tmc_auth_token', input);
-                    sbloccaApp();
-                } else {
-                    document.getElementById('login-error').style.display = 'block';
-                }
-            } catch(e) {
-                alert("Errore di connessione. Riprova.");
-            } finally {
-                btn.innerText = "ACCEDI";
-            }
-        }
-
-        function gestisciErroreServer(data) {
-            if (data.error === "Non autorizzato" || data.error && data.error.includes("Accesso Negato")) {
-                alert("⚠️ Accesso Negato. Il PIN inserito è errato o è stato modificato dall'amministrazione.");
-                esciApp(false);
-                return true;
-            }
-            return false;
-        }
-
-        function esciApp(chiediConferma = true) {
-            if(!chiediConferma || confirm("Vuoi rimuovere l'autorizzazione? Dovrai reinserire la password al prossimo avvio.")) {
-                localStorage.removeItem('tmc_auth_token');
-                location.reload();
-            }
-        }
-
-        function sbloccaApp() {
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('app-content').style.display = 'block';
-            loadDraft(); 
-        }
-
-        function apriBozze() {
-            aggiornaListaBozze();
-            document.getElementById('drafts-overlay').style.display = 'flex';
-        }
-
-        function chiudiBozze() {
-            document.getElementById('drafts-overlay').style.display = 'none';
-        }
-
-        function salvaBozzaAttuale() {
-            const ticket = document.getElementById('n_rapporto_input').value || "Nuovo";
-            const cliente = document.getElementById('cliente_input').value || "Senza Cliente";
-            const nomePredefinito = `${ticket} - ${cliente}`;
-            const nomeBozza = prompt("Inserisci un nome per riconoscere questa bozza:", nomePredefinito);
-            if (!nomeBozza) return;
-
-            const data = {}; 
-            document.querySelectorAll('.save-data').forEach(el => data[el.name] = (el.type==='checkbox' ? el.checked : el.value));
-            const sig = localStorage.getItem('tmc_sig');
-            
-            const bozza = { id: Date.now(), nome: nomeBozza, data: data, counts: {r: rowCount, ric: ricCount}, sig: sig };
-
-            let archivio = JSON.parse(localStorage.getItem('tmc_archivio_bozze') || '[]');
-            archivio.push(bozza);
-            localStorage.setItem('tmc_archivio_bozze', JSON.stringify(archivio));
-            
-            alert("✅ Rapporto salvato nell'archivio bozze!");
-            aggiornaListaBozze();
-        }
-
-        function aggiornaListaBozze() {
-            const archivio = JSON.parse(localStorage.getItem('tmc_archivio_bozze') || '[]');
-            const container = document.getElementById('lista-bozze');
-            container.innerHTML = "";
-            
-            if(archivio.length === 0) {
-                container.innerHTML = "<p style='font-size:13px; color:#666; margin:10px 0;'>Non hai ancora salvato nessuna bozza.</p>";
-                return;
-            }
-            
-            archivio.forEach(b => {
-                const div = document.createElement('div');
-                div.className = "draft-item";
-                div.innerHTML = `
-                    <span style="font-size:12px; font-weight:bold; flex:1; padding-right:10px;">${b.nome}</span>
-                    <div style="display:flex; gap:5px;">
-                        <button onclick="caricaBozzaDallArchivio(${b.id})" style="background:#25D366; padding:8px; width:auto; font-size:11px;">APRI</button>
-                        <button onclick="eliminaBozza(${b.id})" style="background:#ff4444; padding:8px; width:auto; font-size:11px;">X</button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function caricaBozzaDallArchivio(id) {
-            if(!confirm("⚠️ Vuoi caricare questa bozza?\n\nI dati presenti ora sullo schermo verranno sostituiti.")) return;
-            const archivio = JSON.parse(localStorage.getItem('tmc_archivio_bozze') || '[]');
-            const bozza = archivio.find(b => b.id === id);
-            if(!bozza) return;
-
-            localStorage.setItem('tmc_bozza', JSON.stringify(bozza.data));
-            localStorage.setItem('tmc_counts', JSON.stringify(bozza.counts));
-            if (bozza.sig) localStorage.setItem('tmc_sig', bozza.sig);
-            else localStorage.removeItem('tmc_sig');
-            
-            chiudiBozze();
-            loadDraft(); 
-        }
-
-        function eliminaBozza(id) {
-            if(!confirm("Sei sicuro di voler eliminare definitivamente questa bozza?")) return;
-            let archivio = JSON.parse(localStorage.getItem('tmc_archivio_bozze') || '[]');
-            archivio = archivio.filter(b => b.id !== id);
-            localStorage.setItem('tmc_archivio_bozze', JSON.stringify(archivio));
-            aggiornaListaBozze();
-        }
-
-        function apriEditorTesto() {
-            const textInput = document.getElementById('descrizione_input');
-            const textEditor = document.getElementById('editor_fullscreen');
-            textEditor.value = textInput.value;
-            document.getElementById('text-editor-overlay').style.display = 'flex';
-            setTimeout(() => textEditor.focus(), 100); 
-        }
-
-        function chiudiEditorTesto(salva) {
-            if(salva) {
-                const textInput = document.getElementById('descrizione_input');
-                const textEditor = document.getElementById('editor_fullscreen');
-                textInput.value = textEditor.value;
-                saveDraft(); 
-            }
-            document.getElementById('text-editor-overlay').style.display = 'none';
-        }
-
-        let rowCount = 0; let ricCount = 0;
+        let rowCount = 0;
+        let ricCount = 0;
         const canvas = document.getElementById('canvas-fullscreen');
         const ctx = canvas.getContext('2d');
         let drawing = false;
 
+        // --- FUNZIONI INIZIALIZZAZIONE ---
+        window.onload = function() {
+            initSignature();
+            loadDraft(); 
+        };
+
+        // --- GESTIONE TECNICI (Editabile) ---
         function aggiungiRigaTecnico(valore = "") {
             const container = document.getElementById('lista-tecnici-inputs');
             const idx = container.querySelectorAll('.tecnico-riga').length + 1;
+            
             const div = document.createElement('div');
             div.className = "tecnico-riga";
             div.style.display = "flex";
             div.style.gap = "5px";
             div.style.marginTop = "5px";
+
             div.innerHTML = `
                 <div class="tecnico-combo" style="flex:1;">
                     <input type="text" name="tecnico_${idx}" class="save-data tecnico-input-main caps" value="${valore.toUpperCase()}">
@@ -588,233 +334,55 @@
             attachListeners();
         }
 
-        function generaIdUnivoco() {
-            let idInput = document.getElementById('id_univoco_input');
-            if (!idInput.value || idInput.value === "") {
-                const now = new Date();
-                const yy = String(now.getFullYear()).slice(-2);
-                const mm = String(now.getMonth() + 1).padStart(2, '0');
-                const dd = String(now.getDate()).padStart(2, '0');
-                const hh = String(now.getHours()).padStart(2, '0');
-                const min = String(now.getMinutes()).padStart(2, '0');
-                const tckPart = document.getElementById('n_rapporto_input').value || "M";
-                idInput.value = `${tckPart}-${yy}${mm}${dd}-${hh}${min}`;
-                saveDraft();
-            }
-        }
+        // --- SINCRONIZZAZIONE CALENDARIO (TRAMITE CERVELLO) ---
+        async function importaDaCalendario() {
+            // Prende il nome del primo tecnico inserito
+            const t1Input = document.getElementsByName('tecnico_1')[0];
+            const nomeTecnico = t1Input ? t1Input.value : "";
 
-        function controllaFirma() {
-            const signatureData = localStorage.getItem('tmc_sig');
-            if (!signatureData) {
-                alert("⚠️ ATTENZIONE: Manca la firma!\n\nPer favore, fai firmare il rapporto al cliente o al responsabile prima di inviarlo.");
-                return false;
+            if (!nomeTecnico || nomeTecnico === "") {
+                alert("⚠️ Inserisci il nome di un tecnico nel primo campo (Anagrafica) per sincronizzare.");
+                return;
             }
-            return true;
-        }
 
-        // --- NUOVA LOGICA DI IMPORTAZIONE MULTIPLA E RICERCA TICKET ---
-        async function importaDaCalendario(mode = 'tecnico') {
-            let url = `${APP_SCRIPT_URL}?pin=${encodeURIComponent(localStorage.getItem('tmc_auth_token'))}`;
-            
-            if (mode === 'tecnico') {
-                const t1 = document.getElementsByName('tecnico_1')[0].value;
-                if (!t1) return alert("Inserisci un tecnico nel primo campo per sincronizzare gli appuntamenti di oggi!");
-                url += `&tecnico=${encodeURIComponent(t1)}`;
-            } else if (mode === 'ticket') {
-                const tck = document.getElementById('n_rapporto_input').value;
-                if (!tck) return alert("Scrivi un numero di ticket (es. TCK-1234) nella casella per cercarlo!");
-                url += `&ticket=${encodeURIComponent(tck)}`;
-            }
-            
             document.getElementById('loading-overlay').style.display = 'flex';
-            document.getElementById('loading-text').innerText = "Ricerca in corso...";
 
             try {
-                const response = await fetch(url);
+                // Chiama il Cervello su GAS
+                const response = await fetch(`${APP_SCRIPT_URL}?tecnico=${encodeURIComponent(nomeTecnico)}`);
                 const data = await response.json();
                 
                 document.getElementById('loading-overlay').style.display = 'none';
 
-                if (gestisciErroreServer(data)) return;
-
-                if (data.results && data.results.length > 0) {
-                    // Se ha trovato 1 solo intervento, lo carica subito
-                    if (data.results.length === 1) {
-                        applicaDatiCalendario(data.results[0]);
-                    } else {
-                        // Se ne ha trovati di più, apre il modale per scegliere
-                        mostraSelezioneTicket(data.results);
-                    }
-                } else { 
-                    alert(mode === 'tecnico' ? "Nessun evento trovato OGGI per questo tecnico." : "Nessun evento trovato per questo Ticket."); 
-                }
-            } catch (e) { 
-                document.getElementById('loading-overlay').style.display = 'none';
-                alert("Errore connessione."); 
-            }
-        }
-
-        function mostraSelezioneTicket(results) {
-            const container = document.getElementById('lista-ticket-trovati');
-            container.innerHTML = "";
-            results.forEach((res) => {
-                const btn = document.createElement('button');
-                btn.className = 'ticket-btn';
-                btn.innerHTML = `<b>${res.tck || 'Senza TCK'}</b> - ${res.cliente || 'Senza Cliente'}<br><span style="font-size:10px; color:#666;">${res.problema || ''}</span>`;
-                btn.onclick = () => {
-                    document.getElementById('select-ticket-overlay').style.display = 'none';
-                    applicaDatiCalendario(res);
-                };
-                container.appendChild(btn);
-            });
-            document.getElementById('select-ticket-overlay').style.display = 'flex';
-        }
-
-        function applicaDatiCalendario(data) {
-            document.getElementById('n_rapporto_input').value = data.tck || "";
-            document.getElementById('macchina_input').value = (data.matricola || "").toUpperCase();
-            document.getElementById('descrizione_input').value = (data.problema || "").toUpperCase();
-            document.getElementById('cliente_input').value = (data.cliente || "").toUpperCase();
-            document.getElementById('indirizzo_input').value = (data.indirizzo || "").toUpperCase();
-
-            const container = document.getElementById('lista-tecnici-inputs');
-            while (container.children.length > 1) { container.removeChild(container.lastChild); }
-            
-            if(data.tecnici && data.tecnici.length > 0) {
-                document.getElementsByName('tecnico_1')[0].value = data.tecnici[0].toUpperCase();
-                for (let i = 1; i < data.tecnici.length; i++) {
-                    aggiungiRigaTecnico(data.tecnici[i].toUpperCase());
-                }
-            }
-            
-            document.getElementById('id_univoco_input').value = ""; 
-            generaIdUnivoco();
-            saveDraft();
-        }
-
-        function preparaSchermoPerPDF() {
-            window.scrollTo(0, 0);
-            document.getElementById('viewport-meta').setAttribute('content', 'width=1024');
-            document.body.classList.add('pdf-mode');
-            
-            const txtArea = document.getElementById('descrizione_input');
-            const txtPrint = document.getElementById('descrizione_print');
-            txtPrint.innerText = txtArea.value; 
-            txtArea.style.display = 'none';
-            txtPrint.style.display = 'block';
-        }
-
-        function ripristinaSchermo() {
-            document.getElementById('viewport-meta').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
-            document.body.classList.remove('pdf-mode');
-            
-            document.getElementById('descrizione_input').style.display = 'block';
-            document.getElementById('descrizione_print').style.display = 'none';
-        }
-
-        function getPdfOptions(fileName) {
-            return {
-                margin: [5, 0, 5, 0], 
-                filename: fileName, 
-                image: { type: 'jpeg', quality: 0.98 }, 
-                html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, 
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak: { mode: ['css', 'legacy'], avoid: ['tr', '.card', '.bottom-grid', '.main-title-container'] }
-            };
-        }
-
-        function condividiWhatsApp() {
-            if (!controllaFirma()) return;
-
-            generaIdUnivoco();
-            const element = document.getElementById('rapporto-foglio');
-            const idUnivoco = document.getElementById('id_univoco_input').value;
-            const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
-            const fileName = `Rapporto_${idUnivoco}_${nomeCliente}.pdf`.replace(/ /g, "_");
-
-            alert("Generazione del PDF in corso... Attendi l'apertura del menu di condivisione.");
-            preparaSchermoPerPDF();
-
-            setTimeout(() => {
-                html2pdf().set(getPdfOptions(fileName)).from(element).output('blob').then(function(pdfBlob) {
-                    ripristinaSchermo();
-                    const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        navigator.share({ title: 'Rapporto di Intervento', text: 'In allegato il rapporto di intervento.', files: [file] });
-                    } else {
-                        html2pdf().set(getPdfOptions(fileName)).from(element).save();
-                        alert("Il dispositivo non supporta l'invio diretto. Il PDF è stato scaricato.");
-                    }
-                }).catch(err => ripristinaSchermo());
-            }, 100);
-        }
-
-        function inviaEmailAutomaticamente() {
-            if (!controllaFirma()) return; 
-
-            generaIdUnivoco();
-            const emailCliente = document.getElementById('email_input').value;
-            const element = document.getElementById('rapporto-foglio');
-            const idUnivoco = document.getElementById('id_univoco_input').value;
-            const ticketVal = document.getElementById('n_rapporto_input').value || "Senza Ticket";
-            const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
-            const fileName = `Rapporto_${idUnivoco}_${nomeCliente}.pdf`.replace(/ /g, "_");
-
-            let matString = "";
-            for(let i=1; i<=ricCount; i++) {
-                let c = document.getElementsByName(`rc_${i}`)[0]?.value || "";
-                let d = document.getElementsByName(`rd_${i}`)[0]?.value || "";
-                let q = document.getElementsByName(`rq_${i}`)[0]?.value || "";
-                
-                if (q && (c || d)) {
-                    let descParts = [];
-                    if (c) descParts.push(c);
-                    if (d) descParts.push(d);
-                    matString += `- ${q}x ${descParts.join(' - ')}\n`;
-                }
-            }
-
-            let l_ore = document.getElementById('tot_lavoro_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';
-            let v_ore = document.getElementById('tot_viaggio_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';
-            let pch_val = document.getElementById('tot_pch_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';
-
-            let datiCalendario = `\n--- RAPPORTO INVIATO (${idUnivoco}) ---\n`;
-            if(l_ore) datiCalendario += `Lavoro: ${l_ore}\n`;
-            if(v_ore) datiCalendario += `Viaggio: ${v_ore}\n`;
-            if(pch_val) datiCalendario += `Trasferta: ${pch_val}\n`;
-            if(matString) datiCalendario += `Materiale:\n${matString}`;
-
-            document.getElementById('loading-overlay').style.display = 'flex';
-            document.getElementById('loading-text').innerText = "Generazione e Invio... Attendere";
-            preparaSchermoPerPDF();
-
-            setTimeout(() => {
-                html2pdf().set(getPdfOptions(fileName)).from(element).outputPdf('datauristring').then(function(pdfBase64) {
-                    ripristinaSchermo();
-                    const currentPin = localStorage.getItem('tmc_auth_token');
-                    const payload = { 
-                        pdfBase64: pdfBase64, filename: fileName, ticket: ticketVal, 
-                        nomeCliente: nomeCliente, emailCliente: emailCliente, pin: currentPin, updateCalendario: datiCalendario 
-                    };
-                    
-                    fetch(APP_SCRIPT_URL, {
-                        method: "POST", headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById('loading-overlay').style.display = 'none';
-                        if (gestisciErroreServer(data)) return;
-                        if(data.success) { alert("Email inviata con successo in sede " + (emailCliente ? "e al cliente!" : "(nessuna email cliente inserita).")); } 
-                        else { alert("Errore invio: " + data.error); }
-                    })
-                    .catch(e => {
-                        document.getElementById('loading-overlay').style.display = 'none';
-                        alert("Errore di rete durante l'invio.");
+                if (data.cliente) {
+                    // Carica Dati Principali
+                    document.getElementById('rapporto-foglio').querySelectorAll('input, select, textarea').forEach(el => {
+                        if (data[el.name] !== undefined) el.value = data[el.name];
                     });
-                }).catch(err => {
-                    ripristinaSchermo(); document.getElementById('loading-overlay').style.display = 'none';
-                });
-            }, 100);
+                    setTipo(data.tipo_int || 'P');
+
+                    // Gestione Tecnici Multipli
+                    const container = document.getElementById('lista-tecnici-inputs');
+                    // Rimuove extra vecchi
+                    while (container.children.length > 1) { container.removeChild(container.lastChild); }
+                    
+                    if(data.tecnici && data.tecnici.length > 0) {
+                        t1Input.value = data.tecnici[0].toUpperCase(); // Primo
+                        for (let i = 1; i < data.tecnici.length; i++) {
+                            aggiungiRigaTecnico(data.tecnici[i]); // Aggiunge altri
+                        }
+                    }
+
+                    saveDraft();
+                    alert("✅ Sincronizzazione completata! Verifica i dati.");
+                } else if (data.error) { alert("⚠️ " + data.error); }
+                else { alert("❓ Nessun intervento trovato oggi per questo tecnico."); }
+
+            } catch (error) {
+                document.getElementById('loading-overlay').style.display = 'none';
+                alert("❌ Errore durante la connessione al Cervello.\nVerifica l'URL di Apps Script o la connessione internet.");
+                console.error(error);
+            }
         }
 
         function setTipo(val) {
@@ -824,31 +392,25 @@
             saveDraft();
         }
 
-        function getTimeOptions() {
-            let opt = '<option value="">--</option>';
-            for(let h=5; h<=22; h++) {
-                let hh = h < 10 ? '0'+h : h;
-                ['00','30'].forEach(mm => { if(!(h==22 && mm=='30')) opt += `<option value="${hh}:${mm}">${hh}:${mm}</option>`; });
-            }
-            return opt;
-        }
-
+        // --- GESTIONE RIGHE ORE (Editabile, Clock Picker nativo) ---
         function addRow() {
             rowCount++;
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data" name="d_${rowCount}" placeholder="Data" readonly style="font-size:9px; text-align:center; width:100%; pointer-events:none; border:none; background:transparent;"></td>
+                <td><input type="date" class="save-data" name="d_${rowCount}" style="font-size:9px; text-align:center; width:100%;"></td>
                 <td><input type="text" class="save-data caps" name="tec_${rowCount}" placeholder="Nome" style="font-size:8px; text-align:center; width:100%;"></td>
-                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="va1_${rowCount}" readonly style="pointer-events:none;"></td>
-                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="va2_${rowCount}" readonly style="pointer-events:none;"></td>
-                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="lm1_${rowCount}" readonly style="pointer-events:none;"></td>
-                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="lm2_${rowCount}" readonly style="pointer-events:none;"></td>
-                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="lp1_${rowCount}" readonly style="pointer-events:none;"></td>
-                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="lp2_${rowCount}" readonly style="pointer-events:none;"></td>
-                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="vr1_${rowCount}" readonly style="pointer-events:none;"></td>
-                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="vr2_${rowCount}" readonly style="pointer-events:none;"></td>
-                <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;">
-                    <div class="pch-row" style="pointer-events:none;">
+                
+                <td><input type="time" class="save-data" name="va1_${rowCount}" onchange="autoFillNext(this)"></td>
+                <td><input type="time" class="save-data" name="va2_${rowCount}" onchange="autoFillNext(this)"></td>
+                <td><input type="time" class="save-data" name="lm1_${rowCount}" onchange="autoFillNext(this)"></td>
+                <td><input type="time" class="save-data" name="lm2_${rowCount}" onchange="autoFillNext(this)"></td>
+                <td><input type="time" class="save-data" name="lp1_${rowCount}" onchange="autoFillNext(this)"></td>
+                <td><input type="time" class="save-data" name="lp2_${rowCount}" onchange="autoFillNext(this)"></td>
+                <td><input type="time" class="save-data" name="vr1_${rowCount}" onchange="autoFillNext(this)"></td>
+                <td><input type="time" class="save-data" name="vr2_${rowCount}"></td>
+                
+                <td>
+                    <div class="pch-row">
                         P<input type="checkbox" class="save-data" name="p_${rowCount}">
                         C<input type="checkbox" class="save-data" name="c_${rowCount}">
                         H<input type="checkbox" class="save-data" name="h_${rowCount}">
@@ -858,86 +420,21 @@
             attachListeners();
         }
 
-        let currentEditRow = null;
-
-        function formattaDataPerModal(valoreDataTabella) {
-            if(!valoreDataTabella) return "";
-            if(valoreDataTabella.includes('/')) {
-                const parts = valoreDataTabella.split('/');
-                return `${parts[2]}-${parts[1]}-${parts[0]}`;
-            }
-            return valoreDataTabella;
-        }
-
-        function formattaDataPerTabella(valoreDataModal) {
-            if(!valoreDataModal) return "";
-            if(valoreDataModal.includes('-')) {
-                const parts = valoreDataModal.split('-');
-                return `${parts[2]}/${parts[1]}/${parts[0]}`;
-            }
-            return valoreDataModal;
-        }
-
-        function apriEditorOrari(rowIdx) {
-            currentEditRow = rowIdx;
-            const tecName = document.getElementsByName(`tec_${rowIdx}`)[0].value || `TECNICO RIGA ${rowIdx}`;
-            document.getElementById('modal_time_title').innerText = `ORARI: ${tecName.toUpperCase()}`;
+        // Autocompilazione Intelligente a Cascata (valida anche per input time)
+        function autoFillNext(currentEl) {
+            const tr = currentEl.closest('tr');
+            const timeInputs = Array.from(tr.querySelectorAll('input[type="time"]'));
+            const currentIndex = timeInputs.indexOf(currentEl);
             
-            const timeFields = ['va1','va2','lm1','lm2','lp1','lp2','vr1','vr2'];
-            timeFields.forEach(f => { document.getElementById(`modal_${f}`).innerHTML = getTimeOptions(); });
-
-            document.getElementById('modal_d').value = formattaDataPerModal(document.getElementsByName(`d_${rowIdx}`)[0].value);
-            timeFields.forEach(f => { document.getElementById(`modal_${f}`).value = document.getElementsByName(`${f}_${rowIdx}`)[0].value; });
-            document.getElementById('modal_p').checked = document.getElementsByName(`p_${rowIdx}`)[0].checked;
-            document.getElementById('modal_c').checked = document.getElementsByName(`c_${rowIdx}`)[0].checked;
-            document.getElementById('modal_h').checked = document.getElementsByName(`h_${rowIdx}`)[0].checked;
-
-            const copyTo = document.getElementById('modal_copy_to');
-            copyTo.innerHTML = '<option value="">-- Non copiare --</option>';
-            for(let i=1; i<=rowCount; i++) {
-                if (i !== rowIdx) {
-                    const name = document.getElementsByName(`tec_${i}`)[0].value || `Riga ${i}`;
-                    copyTo.innerHTML += `<option value="${i}">${name.toUpperCase()}</option>`;
-                }
+            if (currentEl.value && currentIndex !== -1 && currentIndex < timeInputs.length - 1) {
+                const nextInput = timeInputs[currentIndex + 1];
+                // Compila il successivo solo se è vuoto
+                if (!nextInput.value) { nextInput.value = currentEl.value; }
             }
-
-            document.getElementById('time-editor-overlay').style.display = 'flex';
+            calc(); // Ricalcola totali
         }
 
-        function chiudiEditorOrari(salva) {
-            if(salva && currentEditRow) {
-                const rowIdx = currentEditRow;
-                const timeFields = ['va1','va2','lm1','lm2','lp1','lp2','vr1','vr2'];
-                
-                document.getElementsByName(`d_${rowIdx}`)[0].value = formattaDataPerTabella(document.getElementById('modal_d').value);
-                timeFields.forEach(f => { document.getElementsByName(`${f}_${rowIdx}`)[0].value = document.getElementById(`modal_${f}`).value; });
-                document.getElementsByName(`p_${rowIdx}`)[0].checked = document.getElementById('modal_p').checked;
-                document.getElementsByName(`c_${rowIdx}`)[0].checked = document.getElementById('modal_c').checked;
-                document.getElementsByName(`h_${rowIdx}`)[0].checked = document.getElementById('modal_h').checked;
-
-                const copyTarget = document.getElementById('modal_copy_to').value;
-                if (copyTarget) {
-                    document.getElementsByName(`d_${copyTarget}`)[0].value = formattaDataPerTabella(document.getElementById('modal_d').value);
-                    timeFields.forEach(f => { document.getElementsByName(`${f}_${copyTarget}`)[0].value = document.getElementById(`modal_${f}`).value; });
-                    document.getElementsByName(`p_${copyTarget}`)[0].checked = document.getElementById('modal_p').checked;
-                    document.getElementsByName(`c_${copyTarget}`)[0].checked = document.getElementById('modal_c').checked;
-                    document.getElementsByName(`h_${copyTarget}`)[0].checked = document.getElementById('modal_h').checked;
-                }
-                
-                calc(); 
-            }
-            document.getElementById('time-editor-overlay').style.display = 'none';
-        }
-
-        function modalAutoFill(el) {
-            const selects = Array.from(document.querySelectorAll('.modal-time-select'));
-            const idx = selects.indexOf(el);
-            if (idx !== -1 && idx < selects.length - 1) {
-                const nextSel = selects[idx + 1];
-                if (nextSel && !nextSel.value) nextSel.value = el.value;
-            }
-        }
-
+        // --- GESTIONE RICAMBI (Editabile) ---
         function addRicambio() {
             ricCount++;
             const tr = document.createElement('tr');
@@ -947,7 +444,9 @@
             document.getElementById('ricambi-body').appendChild(tr); attachListeners();
         }
 
+        // --- CALCOLI TOTALI (Materiali e Ore) ---
         function calc() {
+            // 1. Totale Materiali
             let gt = 0;
             for(let i=1; i<=ricCount; i++) {
                 const qInput = document.getElementsByName(`rq_${i}`)[0];
@@ -963,6 +462,8 @@
             }
             document.getElementById('gran-totale').innerText = gt.toFixed(2) + " €";
 
+            // 2. Totale Ore (Rimane editabile fino al PDF)
+            // Helper convertitore
             function timeToMinutes(timeStr) {
                 if (!timeStr) return 0;
                 let parts = timeStr.split(':');
@@ -972,13 +473,11 @@
                 if(!t1 || !t2) return 0;
                 let m1 = timeToMinutes(t1);
                 let m2 = timeToMinutes(t2);
-                if (m2 < m1) m2 += 24 * 60; 
+                if (m2 < m1) m2 += 24 * 60; // Passaggio mezzanotte (raro ma gestito)
                 return m2 - m1;
             };
 
             let totLavoro = 0; let totViaggio = 0;
-            let totP = 0, totC = 0, totH = 0; 
-
             for(let i=1; i<=rowCount; i++) {
                 let va1 = document.getElementsByName(`va1_${i}`)[0]?.value;
                 let va2 = document.getElementsByName(`va2_${i}`)[0]?.value;
@@ -991,40 +490,30 @@
 
                 totViaggio += getDiff(va1, va2) + getDiff(vr1, vr2);
                 totLavoro += getDiff(lm1, lm2) + getDiff(lp1, lp2);
-
-                if (document.getElementsByName(`p_${i}`)[0]?.checked) totP++;
-                if (document.getElementsByName(`c_${i}`)[0]?.checked) totC++;
-                if (document.getElementsByName(`h_${i}`)[0]?.checked) totH++;
             }
 
             const formatOre = (mins) => {
-                if(mins === 0) return "";
                 let h = Math.floor(mins / 60);
                 let m = mins % 60;
-                return ` [TOTALE: ${h}h ${m > 0 ? m + 'm' : ''}]`;
+                return `${h}h ${m > 0 ? m + 'm' : ''}`;
             };
 
-            const spanLav = document.getElementById('tot_lavoro_span');
-            const spanVia = document.getElementById('tot_viaggio_span');
-            if(spanLav) spanLav.innerText = formatOre(totLavoro);
-            if(spanVia) spanVia.innerText = formatOre(totViaggio);
-
-            let pchText = [];
-            if (totP > 0) pchText.push(`${totP} Pranzi`);
-            if (totC > 0) pchText.push(`${totC} Cene`);
-            if (totH > 0) pchText.push(`${totH} Hotel`);
-            
-            const spanPCH = document.getElementById('tot_pch_span');
-            if (spanPCH) { spanPCH.innerText = pchText.length > 0 ? ` [TOTALE: ${pchText.join(' - ')}]` : ""; }
+            document.getElementById('tot_lavoro_span').innerText = formatOre(totLavoro);
+            document.getElementById('tot_viaggio_span').innerText = formatOre(totViaggio);
 
             saveDraft();
         }
 
-        function openSignature() {
-            document.getElementById('signature-overlay').style.display = 'flex';
+        // --- GESTIONE FIRMA ---
+        function initSignature() {
             canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
             ctx.lineWidth = 3; ctx.strokeStyle = "#000"; ctx.lineCap = "round";
+            // Touch events per mobile
+            canvas.addEventListener('touchstart', (e) => { drawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); e.preventDefault(); });
+            canvas.addEventListener('touchmove', (e) => { if(!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); });
+            canvas.addEventListener('touchend', () => drawing = false);
         }
+        function openSignature() { document.getElementById('signature-overlay').style.display = 'flex'; initSignature(); }
         function closeSignature(save) {
             if(save) {
                 const url = canvas.toDataURL();
@@ -1036,16 +525,11 @@
             document.getElementById('signature-overlay').style.display = 'none';
         }
         function clearSignature() { ctx.clearRect(0,0,canvas.width, canvas.height); }
-        function getPos(e) {
-            const rect = canvas.getBoundingClientRect();
-            const cx = e.touches ? e.touches[0].clientX : e.clientX;
-            const cy = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: cx - rect.left, y: cy - rect.top };
-        }
-        canvas.addEventListener('touchstart', (e) => { drawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); e.preventDefault(); });
-        canvas.addEventListener('touchmove', (e) => { if(!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); e.preventDefault(); });
-        canvas.addEventListener('touchend', () => drawing = false);
+        function getPos(e) { const rect = canvas.getBoundingClientRect(); const cx = e.touches ? e.touches[0].clientX : e.clientX; const cy = e.touches ? e.touches[0].clientY : e.clientY; return { x: cx - rect.left, y: cy - rect.top }; }
 
+        // --- GESTIONE BOZZA (Autosave/Editabilità) ---
+        function attachListeners() { document.querySelectorAll('.save-data').forEach(el => { el.oninput = calc; el.onchange = calc; }); }
+        
         function saveDraft() {
             const data = {}; document.querySelectorAll('.save-data').forEach(el => data[el.name] = (el.type==='checkbox' ? el.checked : el.value));
             localStorage.setItem('tmc_bozza', JSON.stringify(data));
@@ -1057,43 +541,80 @@
             document.getElementById('table-body').innerHTML = "";
             document.getElementById('ricambi-body').innerHTML = "";
             rowCount = 0; ricCount = 0;
+            // Rigenera struttura
             for(let i=0; i<counts.r; i++) addRow();
             for(let i=0; i<counts.ric; i++) addRicambio();
+            // Popola dati
             const saved = JSON.parse(localStorage.getItem('tmc_bozza') || '{}');
-            
+            // Gestione Tecnici extra
             let tCount = 1;
             while(saved['tecnico_' + tCount] !== undefined) {
                 if(tCount > 1) aggiungiRigaTecnico(saved['tecnico_' + tCount]);
                 else document.getElementsByName('tecnico_1')[0].value = (saved['tecnico_1'] || "").toUpperCase();
                 tCount++;
             }
+            // Popola campi standard e input time/check
             document.querySelectorAll('.save-data').forEach(el => { 
                 if(saved[el.name]!==undefined) el.type==='checkbox' ? el.checked=saved[el.name] : el.value=saved[el.name]; 
             });
+            // Firma
             const sig = localStorage.getItem('tmc_sig');
-            if(sig) { 
-                document.getElementById('sig-image').src = sig; 
-                document.getElementById('sig-image').style.display='block'; 
-                document.getElementById('placeholder-firma').style.display='none'; 
-            } else {
-                document.getElementById('sig-image').src = ""; 
-                document.getElementById('sig-image').style.display='none'; 
-                document.getElementById('placeholder-firma').style.display='inline'; 
-            }
+            if(sig) { document.getElementById('sig-image').src = sig; document.getElementById('sig-image').style.display='block'; document.getElementById('placeholder-firma').style.display='none'; }
             setTipo(saved['tipo_int'] || 'P');
             calc();
         }
         
-        function attachListeners() { document.querySelectorAll('.save-data').forEach(el => { el.oninput = calc; }); }
         function nuovoRapporto() { if(confirm("Cancellare tutti i dati a schermo e iniziare un modulo vuoto?")) { localStorage.removeItem('tmc_bozza'); localStorage.removeItem('tmc_counts'); localStorage.removeItem('tmc_sig'); location.reload(); } }
 
-        window.onload = function() {
-            const savedPin = localStorage.getItem('tmc_auth_token');
-            if(savedPin && savedPin !== "") sbloccaApp();
-            else { document.getElementById('login-overlay').style.display = 'flex'; document.getElementById('app-content').style.display = 'none'; }
-            
-            document.getElementById('pin_input').addEventListener("keypress", function(event) { if (event.key === "Enter") { event.preventDefault(); verificaLogin(); } });
-        };
+        // --- EXPORT & SHARING (Rapporto editabile fino a qui) ---
+        function preparaSchermoPerPDF() {
+            window.scrollTo(0, 0); // Risale in alto
+            // Forza layout desktop per html2pdf
+            document.getElementById('viewport-meta').setAttribute('content', 'width=1024');
+            document.body.classList.add('pdf-mode');
+        }
+
+        function ripristinaSchermo() {
+            // Ripristina layout mobile
+            document.getElementById('viewport-meta').setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+            document.body.classList.remove('pdf-mode');
+        }
+
+        function getPdfOptions(fileName) {
+            return {
+                margin: 0, 
+                filename: fileName, 
+                image: { type: 'jpeg', quality: 0.98 }, 
+                html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, 
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+        }
+
+        // WhatsApp Share (Android canShare)
+        function condividiWhatsApp() {
+            calc(); // Ricalcolo finale
+            const element = document.getElementById('rapporto-foglio');
+            const nomeCliente = document.getElementsByName('cliente')[0].value || 'Cliente';
+            const fileName = `Rapporto_TMC_${nomeCliente}.pdf`.replace(/ /g, "_");
+
+            alert("Generazione del PDF in corso... Attendi l'apertura del menu di condivisione.");
+            preparaSchermoPerPDF();
+
+            setTimeout(() => {
+                html2pdf().set(getPdfOptions(fileName)).from(element).output('blob').then(function(pdfBlob) {
+                    ripristinaSchermo();
+                    const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+                    // Verifica supporto navigatore Web Share API per file
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                        navigator.share({ title: 'Rapporto di Intervento', text: 'In allegato il rapporto di intervento.', files: [file] });
+                    } else {
+                        // Fallback: download semplice
+                        html2pdf().set(getPdfOptions(fileName)).from(element).save();
+                        alert("Il dispositivo non supporta la condivisione diretta. Il PDF è stato scaricato nella cartella Download. Puoi allegarlo manualmente.");
+                    }
+                }).catch(err => { ripristinaSchermo(); console.error(err); });
+            }, 100);
+        }
     </script>
 </body>
 </html>

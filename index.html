@@ -404,6 +404,7 @@
 
     <script>
         const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxh6R-LKwzIsbzNgTyf41AZTs3fxd_CqTE2bLQLQFcx7mwpb-ueqOARluwFPQFW47jM/exec";
+        const FRASE_SICUREZZA = "MACCHINA LASCIATA AL CLIENTE IN FUNZIONE E IN CONDIZIONE DI SICUREZZA";
         
         async function verificaLogin() {
             const input = document.getElementById('pin_input').value.toUpperCase().trim();
@@ -612,7 +613,6 @@
             return true;
         }
 
-        // --- NUOVA LOGICA DI IMPORTAZIONE MULTIPLA E RICERCA TICKET ---
         async function importaDaCalendario(mode = 'tecnico') {
             let url = `${APP_SCRIPT_URL}?pin=${encodeURIComponent(localStorage.getItem('tmc_auth_token'))}`;
             
@@ -638,11 +638,9 @@
                 if (gestisciErroreServer(data)) return;
 
                 if (data.results && data.results.length > 0) {
-                    // Se ha trovato 1 solo intervento, lo carica subito
                     if (data.results.length === 1) {
                         applicaDatiCalendario(data.results[0]);
                     } else {
-                        // Se ne ha trovati di più, apre il modale per scegliere
                         mostraSelezioneTicket(data.results);
                     }
                 } else { 
@@ -673,7 +671,15 @@
         function applicaDatiCalendario(data) {
             document.getElementById('n_rapporto_input').value = data.tck || "";
             document.getElementById('macchina_input').value = (data.matricola || "").toUpperCase();
-            document.getElementById('descrizione_input').value = (data.problema || "").toUpperCase();
+            
+            // --- INSERIMENTO FRASE SICUREZZA ALLA SINCRONIZZAZIONE ---
+            let problemaSync = (data.problema || "").toUpperCase();
+            if (problemaSync.indexOf(FRASE_SICUREZZA) === -1) {
+                problemaSync += (problemaSync ? "\n\n" : "") + FRASE_SICUREZZA;
+            }
+            document.getElementById('descrizione_input').value = problemaSync;
+            // ---------------------------------------------------------
+            
             document.getElementById('cliente_input').value = (data.cliente || "").toUpperCase();
             document.getElementById('indirizzo_input').value = (data.indirizzo || "").toUpperCase();
 
@@ -1060,6 +1066,12 @@
             for(let i=0; i<counts.r; i++) addRow();
             for(let i=0; i<counts.ric; i++) addRicambio();
             const saved = JSON.parse(localStorage.getItem('tmc_bozza') || '{}');
+            
+            // --- INSERIMENTO FRASE SICUREZZA DI DEFAULT ---
+            if (!saved['descrizione']) {
+                saved['descrizione'] = FRASE_SICUREZZA;
+            }
+            // ----------------------------------------------
             
             let tCount = 1;
             while(saved['tecnico_' + tCount] !== undefined) {

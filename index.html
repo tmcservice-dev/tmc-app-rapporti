@@ -1068,7 +1068,7 @@
             const saved = JSON.parse(localStorage.getItem('tmc_bozza') || '{}');
             
             // --- INSERIMENTO FRASE SICUREZZA DI DEFAULT ---
-            if (!saved['descrizione']) {
+            if (!saved['descrizione'] || saved['descrizione'].trim() === "") {
                 saved['descrizione'] = FRASE_SICUREZZA;
             }
             // ----------------------------------------------
@@ -1097,7 +1097,20 @@
         }
         
         function attachListeners() { document.querySelectorAll('.save-data').forEach(el => { el.oninput = calc; }); }
-        function nuovoRapporto() { if(confirm("Cancellare tutti i dati a schermo e iniziare un modulo vuoto?")) { localStorage.removeItem('tmc_bozza'); localStorage.removeItem('tmc_counts'); localStorage.removeItem('tmc_sig'); location.reload(); } }
+        
+        function nuovoRapporto() { 
+            if(confirm("Cancellare tutti i dati a schermo e iniziare un modulo vuoto?")) { 
+                localStorage.removeItem('tmc_bozza'); 
+                localStorage.removeItem('tmc_counts'); 
+                localStorage.removeItem('tmc_sig'); 
+                location.reload(); 
+            } 
+        }
+
+        // --- ASCOLTATORI PER LA STAMPA NATIVA DEL BROWSER ---
+        window.addEventListener('beforeprint', preparaSchermoPerPDF);
+        window.addEventListener('afterprint', ripristinaSchermo);
+        // ----------------------------------------------------
 
         window.onload = function() {
             const savedPin = localStorage.getItem('tmc_auth_token');

@@ -11,7 +11,7 @@
         body { font-family: 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background: #525659; color: var(--tmc-dark); }
         .page-a4 { 
             background: white; width: 210mm; min-height: 297mm; margin: 10px auto; 
-            padding: 2mm 8mm; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            padding: 1mm 8mm 2mm 8mm; box-sizing: border-box; box-shadow: 0 0 10px rgba(0,0,0,0.5);
             display: flex; flex-direction: column; position: relative;
         }
 
@@ -24,10 +24,10 @@
         body.pdf-mode .page-a4 {
             width: 210mm !important;
             height: auto !important; 
-            min-height: 297mm !important;
+            min-height: auto !important;
             max-width: none !important;
             margin: 0 !important;
-            padding: 2mm 8mm !important;
+            padding: 1mm 8mm !important;
             box-shadow: none !important;
             border: none !important;
             transform: none !important;
@@ -230,7 +230,7 @@
                 <div style="display:flex; flex-direction:column; gap:2px;">
                     <span style="display:flex; align-items:center; gap:5px;">
                         RAPPORTO INTERVENTO N. 
-                        <input type="text" id="n_rapporto_input" name="n_rapporto" class="save-data caps" placeholder="TCK-" style="width:70px; font-size:16px; font-weight:bold; color:var(--tmc-blue);">
+                        <input type="text" id="n_rapporto_input" name="n_rapporto" class="save-data caps" placeholder="TCK-" style="width:120px; font-size:16px; font-weight:bold; color:var(--tmc-blue);">
                         <button type="button" class="no-print" onclick="importaDaCalendario('ticket')" style="background:var(--tmc-blue); color:white; border:none; border-radius:4px; padding:3px 8px; font-size:12px; cursor:pointer;" title="Cerca per Ticket">🔍 CERCA</button>
                     </span>
                     <span style="font-size:9px; color:#666; font-weight:normal;">ID FATTURAZIONE: <input type="text" id="id_univoco_input" name="id_univoco" class="save-data" readonly style="width:130px; font-size:9px; color:#666; border:none; outline:none; background:transparent;" placeholder="In attesa..."></span>
@@ -720,7 +720,7 @@
 
         function getPdfOptions(fileName) {
             return {
-                margin: [5, 0, 5, 0], 
+                margin: [1, 0, 2, 0], // Recuperato tantissimo spazio al top
                 filename: fileName, 
                 image: { type: 'jpeg', quality: 0.98 }, 
                 html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, 

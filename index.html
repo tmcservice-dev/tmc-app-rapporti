@@ -537,9 +537,33 @@
             loadDraft(); 
         }
 
+        // CANCELLAZIONE DAL CLOUD E BOZZA LOCALE
+        async function rimuoviDaCloud(tck) {
+            if (!tck || tck === "TCK-") return;
+            try {
+                await fetch(APP_SCRIPT_URL, {
+                    method: "POST",
+                    mode: "no-cors",
+                    body: JSON.stringify({
+                        action: "delete_cloud",
+                        tck: tck
+                    })
+                });
+            } catch (e) {
+                console.log("Errore pulizia cloud post-invio");
+            }
+        }
+
         function eliminaBozza(id) {
-            if(!confirm("Sei sicuro di voler eliminare definitivamente questa bozza?")) return;
+            if(!confirm("Eliminare definitivamente questa bozza anche dal Cloud?")) return;
+            
             let archivio = JSON.parse(localStorage.getItem('tmc_archivio_bozze') || '[]');
+            const bozza = archivio.find(b => b.id === id);
+            
+            if (bozza && bozza.data && bozza.data.n_rapporto) {
+                rimuoviDaCloud(bozza.data.n_rapporto);
+            }
+
             archivio = archivio.filter(b => b.id !== id);
             localStorage.setItem('tmc_archivio_bozze', JSON.stringify(archivio));
             aggiornaListaBozze();
@@ -574,7 +598,6 @@
                 const em = document.getElementById('modal_email_input').value.trim();
                 document.getElementById('email_input').value = em;
                 
-                // Estrae in automatico il nome per il responsabile e toglie eventuali punti
                 if (em.includes('@')) {
                     const estrazione = em.split('@')[0].replace(/\./g, ' ').toUpperCase();
                     document.getElementsByName('nome_responsabile')[0].value = estrazione;
@@ -792,69 +815,41 @@
         function inviaEmailAutomaticamente() {
             if (!controllaFirma()) return; 
 
-            generaIdUnivoco();
-            const emailCliente = document.getElementById('email_input').value;
             const element = document.getElementById('rapporto-foglio');
-            const idUnivoco = document.getElementById('id_univoco_input').value;
-            const ticketVal = document.getElementById('n_rapporto_input').value || "Senza Ticket";
-            const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
-            const fileName = `Rapporto_${idUnivoco}_${nomeCliente}.pdf`.replace(/ /g, "_");
-
-            let matString = "";
-            for(let i=1; i<=ricCount; i++) {
-                let c = document.getElementsByName(`rc_${i}`)[0]?.value || "";
-                let d = document.getElementsByName(`rd_${i}`)[0]?.value || "";
-                let q = document.getElementsByName(`rq_${i}`)[0]?.value || "";
-                
-                if (q && (c || d)) {
-                    let descParts = [];
-                    if (c) descParts.push(c);
-                    if (d) descParts.push(d);
-                    matString += `- ${q}x ${descParts.join(' - ')}\n`;
-                }
+            let tckVal = document.getElementById('n_rapporto_input').value;
+            if(!tckVal.startsWith("TCK-")) {
+                 tckVal = "TCK-" + tckVal;
+                 document.getElementById('n_rapporto_input').value = tckVal;
             }
 
-            let l_ore = document.getElementById('tot_lavoro_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';
-            let v_ore = document.getElementById('tot_viaggio_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';
-            let pch_val = document.getElementById('tot_pch_span')?.innerText.replace('[TOTALE: ', '').replace(']', '') || '';
-
-            let datiCalendario = `\n--- RAPPORTO INVIATO (${idUnivoco}) ---\n`;
-            if(l_ore) datiCalendario += `Lavoro: ${l_ore}\n`;
-            if(v_ore) datiCalendario += `Viaggio: ${v_ore}\n`;
-            if(pch_val) datiCalendario += `Trasferta: ${pch_val}\n`;
-            if(matString) datiCalendario += `Materiale:\n${matString}`;
-
             document.getElementById('loading-overlay').style.display = 'flex';
-            document.getElementById('loading-text').innerText = "Generazione e Invio... Attendere";
+            document.getElementById('loading-text').innerText = "Invio in corso e pulizia archivi...";
+            
             preparaSchermoPerPDF();
 
             setTimeout(() => {
-                html2pdf().set(getPdfOptions(fileName)).from(element).outputPdf('datauristring').then(function(pdfBase64) {
+                html2pdf().set(getPdfOptions(tckVal)).from(element).outputPdf('datauristring').then(function(pdfBase64) {
                     ripristinaSchermo();
-                    const currentPin = localStorage.getItem('tmc_auth_token');
-                    const payload = { 
-                        pdfBase64: pdfBase64, filename: fileName, ticket: ticketVal, 
-                        nomeCliente: nomeCliente, emailCliente: emailCliente, pin: currentPin, updateCalendario: datiCalendario 
-                    };
                     
                     fetch(APP_SCRIPT_URL, {
-                        method: "POST", headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload)
+                        method: "POST",
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            pdfBase64: pdfBase64,
+                            ticket: tckVal,
+                            pin: localStorage.getItem('tmc_auth_token')
+                        })
                     })
-                    .then(response => response.json())
+                    .then(res => res.json())
                     .then(data => {
                         document.getElementById('loading-overlay').style.display = 'none';
-                        if (gestisciErroreServer(data)) return;
-                        if(data.success) { alert("Email inviata con successo in sede " + (emailCliente ? "e al cliente!" : "(nessuna email cliente inserita).")); } 
-                        else { alert("Errore invio: " + data.error); }
-                    })
-                    .catch(e => {
-                        document.getElementById('loading-overlay').style.display = 'none';
-                        alert("Errore di rete durante l'invio.");
+                        if(data.success) {
+                            alert("Email inviata! La bozza è stata rimossa dal cloud.");
+                            nuovoRapporto();
+                        }
                     });
-                }).catch(err => {
-                    ripristinaSchermo(); document.getElementById('loading-overlay').style.display = 'none';
                 });
-            }, 100);
+            }, 500);
         }
 
         function setTipo(val) {
@@ -958,10 +953,9 @@
                 const vr1 = document.getElementById('modal_vr1').value;
                 const vr2 = document.getElementById('modal_vr2').value;
 
-                // Controlli per gli orari identici
                 if ((va1 && va1 === va2) || (lm1 && lm1 === lm2) || (lp1 && lp1 === lp2) || (vr1 && vr1 === vr2)) {
                     alert("Attenzione!! Errore nella compilazione oraria: un orario di INIZIO è uguale all'orario di FINE.");
-                    return; // Blocca il salvataggio
+                    return; 
                 }
 
                 const rowIdx = currentEditRow;
@@ -1053,7 +1047,6 @@
                 totViaggio += minViaggioRiga;
                 totLavoro += minLavoroRiga;
 
-                // Mostra totale sotto al tecnico
                 let totRigaMinuti = minViaggioRiga + minLavoroRiga;
                 let divOreTecnico = document.getElementById(`ore_riga_${i}`);
                 if(divOreTecnico) {
@@ -1102,7 +1095,6 @@
         
         function closeSignature(save) {
             if(save) {
-                // Rotazione automatica di -90 gradi (antiorario)
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = canvas.height;
                 tempCanvas.height = canvas.width;
@@ -1174,7 +1166,9 @@
             calc();
         }
         
-        function attachListeners() { document.querySelectorAll('.save-data').forEach(el => { el.oninput = calc; }); }
+        function attachListeners() {
+            document.querySelectorAll('.save-data').forEach(el => { el.oninput = calc; });
+        }
         
         function nuovoRapporto() { 
             if(confirm("Cancellare tutti i dati a schermo e iniziare un modulo vuoto?")) { 

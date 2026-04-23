@@ -22,16 +22,9 @@
 
         body.pdf-mode { background: white !important; }
         body.pdf-mode .page-a4 {
-            width: 210mm !important;
-            height: auto !important; 
-            min-height: auto !important;
-            max-width: none !important;
-            margin: 0 !important;
-            padding: 1mm 8mm !important;
-            box-shadow: none !important;
-            border: none !important;
-            transform: none !important;
-            overflow: visible !important; 
+            width: 210mm !important; height: auto !important; min-height: auto !important; max-width: none !important;
+            margin: 0 !important; padding: 1mm 8mm !important; box-shadow: none !important; border: none !important;
+            transform: none !important; overflow: visible !important; 
         }
         body.pdf-mode .no-print { display: none !important; }
 
@@ -62,12 +55,7 @@
         th { background: var(--tmc-light-blue); font-size: 7px; border: 1px solid var(--tmc-blue); padding: 5px 2px; color: var(--tmc-blue); }
         td { border: 1px solid var(--tmc-blue); padding: 3px 1px; text-align: center; }
         
-        .time-select { 
-            font-size: 11px; font-weight: bold; color: var(--tmc-blue); background: transparent; border: 1px solid transparent; 
-            width: 100%; height: 26px; border-radius: 3px; 
-            text-align: center; margin: 0; padding: 0; outline: none;
-        }
-
+        .time-select { font-size: 11px; font-weight: bold; color: var(--tmc-blue); background: transparent; border: 1px solid transparent; width: 100%; height: 26px; border-radius: 3px; text-align: center; margin: 0; padding: 0; outline: none; }
         .pch-row { display: flex; justify-content: center; gap: 3px; font-size: 9px; font-weight: bold; align-items: center; }
         .pch-row input { width: auto; margin: 0; }
 
@@ -84,10 +72,7 @@
         
         .no-print { display: flex; flex-wrap: wrap; gap: 10px; padding: 15px; max-width: 210mm; margin: 0 auto; justify-content: center; }
         .btn { flex: 1; min-width: 90px; padding: 12px 5px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; color: white; font-size: 11px; text-align: center; }
-        .btn-blue { background: var(--tmc-blue); }
-        .btn-green { background: #25D366; } 
-        .btn-orange { background: #ff9800; } 
-        .btn-dark { background: #444; }
+        .btn-blue { background: var(--tmc-blue); } .btn-green { background: #25D366; } .btn-orange { background: #ff9800; } .btn-dark { background: #444; }
         .btn-sync { position: absolute; right: 10px; top: 10px; font-size: 20px; background: none; border: none; cursor: pointer; z-index: 10; }
 
         @media print { 
@@ -107,16 +92,13 @@
         .modal-box input { border: 2px solid var(--tmc-blue); padding: 12px; margin: 20px 0; width: calc(100% - 24px); font-size: 18px; text-align: center; border-radius: 5px; outline: none; }
         .modal-box button { background: var(--tmc-blue); color: white; border: none; padding: 15px; font-size: 16px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; }
         
-        /* Modale Bozze */
         #drafts-overlay { z-index: 99998; }
         .draft-item { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding:12px 0; text-align:left; }
 
-        /* Modale Orari */
         .modal-time-label { display:block; font-size:11px; font-weight:bold; color:var(--tmc-blue); margin-bottom:3px; }
         .modal-time-group { display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px; background:#f9f9f9; padding:10px; border-radius:5px; border:1px solid #eee; }
         .modal-time-select { width:100%; padding:10px; font-size:16px; border:1px solid #ccc; border-radius:4px; outline:none; background:white; font-weight:bold; color:var(--tmc-blue); text-align:center; appearance: none; }
         
-        /* Modale Selezione Ticket */
         .ticket-btn { background:#f0f7ff; color:var(--tmc-blue); border:1px solid var(--tmc-blue); padding:10px; text-align:left; border-radius:5px; margin-bottom:8px; width:100%; cursor:pointer; }
         .ticket-btn:hover { background:var(--tmc-blue); color:white; }
     </style>
@@ -151,11 +133,11 @@
 
     <div id="drafts-overlay" class="overlay-bg" style="display:none;">
         <div class="modal-box" style="max-height: 80%; overflow-y: auto; padding: 20px;">
-            <h3 style="color:var(--tmc-blue); margin-top:0;">Archivio Bozze</h3>
-            <p style="font-size: 11px; color: #666; margin-top: 0;">Salva i lavori in sospeso per completarli dopo.</p>
-            <button onclick="salvaBozzaAttuale()" style="background:#ff9800; margin-bottom:15px; font-size:13px; padding:12px;">+ SALVA RAPPORTO ATTUALE</button>
-            <div id="lista-bozze" style="margin-bottom: 15px;"></div>
-            <button onclick="chiudiBozze()" style="background:#444;">CHIUDI ARCHIVIO</button>
+            <h3 style="color:var(--tmc-blue); margin-top:0;">Archivio Bozze Condivise</h3>
+            <p style="font-size: 11px; color: #666; margin-top: 0;">Qui trovi i lavori in sospeso di tutti i dispositivi.</p>
+            <button onclick="salvaBozzaAttuale()" style="background:#ff9800; margin-bottom:15px; font-size:13px; padding:12px;">+ SALVA E CONDIVIDI RAPPORTO ATTUALE</button>
+            <div id="lista-bozze" style="margin-bottom: 15px; border: 1px solid #eee; padding: 10px; border-radius: 5px;"></div>
+            <button onclick="document.getElementById('drafts-overlay').style.display = 'none';" style="background:#444;">CHIUDI ARCHIVIO</button>
         </div>
     </div>
 
@@ -391,7 +373,7 @@
         <div class="no-print">
             <button class="btn btn-dark" onclick="addRow()">+ GIORNO/TECNICO</button>
             <button class="btn btn-dark" onclick="addRicambio()">+ RICAMBIO</button>
-            <button class="btn btn-orange" style="background:#ff9800; min-width:100%;" onclick="apriBozze()">📂 ARCHIVIO BOZZE</button>
+            <button class="btn btn-orange" style="background:#ff9800; min-width:100%;" onclick="apriBozze()">☁️ ARCHIVIO BOZZE (CLOUD)</button>
             <button class="btn btn-blue" onclick="window.print()">SALVA PDF</button>
             <button class="btn btn-green" onclick="condividiWhatsApp()">WHATSAPP</button>
             <button class="btn btn-orange" style="background:#e91e63;" onclick="inviaEmailAutomaticamente()">INVIA EMAIL</button>
@@ -446,15 +428,6 @@
             }
         }
 
-        function gestisciErroreServer(data) {
-            if (data.error === "Non autorizzato" || data.error && data.error.includes("Accesso Negato")) {
-                alert("⚠️ Accesso Negato. Il PIN inserito è errato o è stato modificato dall'amministrazione.");
-                esciApp(false);
-                return true;
-            }
-            return false;
-        }
-
         function esciApp(chiediConferma = true) {
             if(!chiediConferma || confirm("Vuoi rimuovere l'autorizzazione? Dovrai reinserire la password al prossimo avvio.")) {
                 localStorage.removeItem('tmc_auth_token');
@@ -468,106 +441,142 @@
             loadDraft(); 
         }
 
-        function apriBozze() {
-            aggiornaListaBozze();
+        // ===============================================
+        // NUOVO MOTORE BOZZE (100% IN CLOUD CONDIVISO)
+        // ===============================================
+        async function apriBozze() {
             document.getElementById('drafts-overlay').style.display = 'flex';
-        }
-
-        function chiudiBozze() {
-            document.getElementById('drafts-overlay').style.display = 'none';
-        }
-
-        function salvaBozzaAttuale() {
-            const ticket = document.getElementById('n_rapporto_input').value || "Nuovo";
-            const cliente = document.getElementById('cliente_input').value || "Senza Cliente";
-            const nomePredefinito = `${ticket} - ${cliente}`;
-            const nomeBozza = prompt("Inserisci un nome per riconoscere questa bozza:", nomePredefinito);
-            if (!nomeBozza) return;
-
-            const data = {}; 
-            document.querySelectorAll('.save-data').forEach(el => data[el.name] = (el.type==='checkbox' ? el.checked : el.value));
-            const sig = localStorage.getItem('tmc_sig');
+            document.getElementById('lista-bozze').innerHTML = "<p style='text-align:center;'>Download dal Cloud in corso... ⏳</p>";
             
-            const bozza = { id: Date.now(), nome: nomeBozza, data: data, counts: {r: rowCount, ric: ricCount}, sig: sig };
-
-            let archivio = JSON.parse(localStorage.getItem('tmc_archivio_bozze') || '[]');
-            archivio.push(bozza);
-            localStorage.setItem('tmc_archivio_bozze', JSON.stringify(archivio));
-            
-            alert("✅ Rapporto salvato nell'archivio bozze!");
-            aggiornaListaBozze();
+            try {
+                const pin = encodeURIComponent(localStorage.getItem('tmc_auth_token'));
+                const res = await fetch(`${APP_SCRIPT_URL}?action=get_bozze&pin=${pin}`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    aggiornaListaBozzeCloud(data.bozze);
+                } else {
+                    document.getElementById('lista-bozze').innerHTML = "<p style='color:red;'>Errore. Verifica password o connessione.</p>";
+                }
+            } catch (e) {
+                document.getElementById('lista-bozze').innerHTML = "<p style='color:red;'>Errore di connessione al Cloud.</p>";
+            }
         }
 
-        function aggiornaListaBozze() {
-            const archivio = JSON.parse(localStorage.getItem('tmc_archivio_bozze') || '[]');
+        function aggiornaListaBozzeCloud(bozze) {
             const container = document.getElementById('lista-bozze');
             container.innerHTML = "";
             
-            if(archivio.length === 0) {
-                container.innerHTML = "<p style='font-size:13px; color:#666; margin:10px 0;'>Non hai ancora salvato nessuna bozza.</p>";
+            if(!bozze || bozze.length === 0) {
+                container.innerHTML = "<p style='font-size:13px; color:#666; margin:10px 0; text-align:center;'>Nessun lavoro in sospeso nel Cloud condiviso.</p>";
                 return;
             }
             
-            archivio.forEach(b => {
+            window.bozzeCloud = bozze; 
+
+            bozze.forEach((b, index) => {
                 const div = document.createElement('div');
                 div.className = "draft-item";
+                
+                let d = new Date(b.data);
+                let dataFormattata = d.toLocaleString('it-IT', {day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit'});
+                
                 div.innerHTML = `
-                    <span style="font-size:12px; font-weight:bold; flex:1; padding-right:10px;">${b.nome}</span>
+                    <div style="flex:1; padding-right:10px;">
+                        <strong style="font-size:13px; color:var(--tmc-blue);">${b.tck}</strong><br>
+                        <span style="font-size:10px; color:#555;">${b.tecnico} - ${dataFormattata}</span>
+                    </div>
                     <div style="display:flex; gap:5px;">
-                        <button onclick="caricaBozzaDallArchivio(${b.id})" style="background:#25D366; padding:8px; width:auto; font-size:11px;">APRI</button>
-                        <button onclick="eliminaBozza(${b.id})" style="background:#ff4444; padding:8px; width:auto; font-size:11px;">X</button>
+                        <button onclick="caricaBozzaCloud(${index})" style="background:#25D366; padding:8px; width:auto; font-size:11px;">APRI</button>
+                        <button onclick="eliminaBozzaCloudUI('${b.tck}')" style="background:#ff4444; padding:8px; width:auto; font-size:11px;">X</button>
                     </div>
                 `;
                 container.appendChild(div);
             });
         }
 
-        function caricaBozzaDallArchivio(id) {
-            if(!confirm("⚠️ Vuoi caricare questa bozza?\n\nI dati presenti ora sullo schermo verranno sostituiti.")) return;
-            const archivio = JSON.parse(localStorage.getItem('tmc_archivio_bozze') || '[]');
-            const bozza = archivio.find(b => b.id === id);
+        function caricaBozzaCloud(index) {
+            if(!confirm("⚠️ Vuoi caricare questa bozza?\n\nI dati attuali a schermo verranno sostituiti.")) return;
+            
+            const bozza = window.bozzeCloud[index];
             if(!bozza) return;
 
-            localStorage.setItem('tmc_bozza', JSON.stringify(bozza.data));
-            localStorage.setItem('tmc_counts', JSON.stringify(bozza.counts));
-            if (bozza.sig) localStorage.setItem('tmc_sig', bozza.sig);
-            else localStorage.removeItem('tmc_sig');
-            
-            chiudiBozze();
-            loadDraft(); 
+            try {
+                const jsonData = JSON.parse(bozza.dati); 
+                
+                localStorage.setItem('tmc_bozza', JSON.stringify(jsonData.inputs || {}));
+                localStorage.setItem('tmc_counts', JSON.stringify(jsonData.counts || {r:1, ric:1}));
+                if (jsonData.sig) localStorage.setItem('tmc_sig', jsonData.sig);
+                else localStorage.removeItem('tmc_sig');
+                
+                document.getElementById('drafts-overlay').style.display = 'none';
+                loadDraft(); 
+            } catch(e) {
+                alert("Errore nel caricamento dei dati della bozza.");
+            }
         }
 
-        // CANCELLAZIONE DAL CLOUD E BOZZA LOCALE
-        async function rimuoviDaCloud(tck) {
-            if (!tck || tck === "TCK-") return;
+        async function salvaBozzaAttuale() {
+            const ticket = document.getElementById('n_rapporto_input').value;
+            const tecnico = document.getElementsByName('tecnico_1')[0].value || "Nessun Tecnico";
+            
+            if (!ticket || ticket === "TCK-") {
+                alert("⚠️ Devi inserire almeno il NUMERO DI RAPPORTO (TCK) per poterlo salvare nel Cloud e condividerlo!");
+                return;
+            }
+
+            const dataInputs = {}; 
+            document.querySelectorAll('.save-data').forEach(el => dataInputs[el.name] = (el.type==='checkbox' ? el.checked : el.value));
+            
+            const payload = {
+                inputs: dataInputs,
+                counts: {r: rowCount, ric: ricCount},
+                sig: localStorage.getItem('tmc_sig')
+            };
+
+            document.getElementById('loading-overlay').style.display = 'flex';
+            document.getElementById('loading-text').innerText = "Salvataggio nel Cloud Condiviso...";
+
+            try {
+                const res = await fetch(APP_SCRIPT_URL, {
+                    method: "POST",
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: "save_cloud",
+                        tck: ticket,
+                        tecnico: tecnico,
+                        content: payload,
+                        pin: localStorage.getItem('tmc_auth_token')
+                    })
+                });
+                const out = await res.json();
+                if (out.success) {
+                    alert("✅ Rapporto salvato! Ora è visibile su tutti i dispositivi.");
+                    apriBozze(); 
+                }
+            } catch(e) {
+                alert("Errore di rete durante il salvataggio.");
+            } finally {
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
+        }
+
+        async function eliminaBozzaCloudUI(tck) {
+            if(!confirm("⚠️ Sei sicuro di voler eliminare DEFINITIVAMENTE questa bozza da tutti i dispositivi?")) return;
+            
+            document.getElementById('lista-bozze').innerHTML = "<p style='text-align:center;'>Eliminazione in corso... ⏳</p>";
+            
             try {
                 await fetch(APP_SCRIPT_URL, {
                     method: "POST",
-                    mode: "no-cors",
-                    body: JSON.stringify({
-                        action: "delete_cloud",
-                        tck: tck
-                    })
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: "delete_cloud", tck: tck, pin: localStorage.getItem('tmc_auth_token') })
                 });
-            } catch (e) {
-                console.log("Errore pulizia cloud post-invio");
-            }
+                apriBozze(); 
+            } catch (e) { alert("Errore di rete"); }
         }
 
-        function eliminaBozza(id) {
-            if(!confirm("Eliminare definitivamente questa bozza anche dal Cloud?")) return;
-            
-            let archivio = JSON.parse(localStorage.getItem('tmc_archivio_bozze') || '[]');
-            const bozza = archivio.find(b => b.id === id);
-            
-            if (bozza && bozza.data && bozza.data.n_rapporto) {
-                rimuoviDaCloud(bozza.data.n_rapporto);
-            }
-
-            archivio = archivio.filter(b => b.id !== id);
-            localStorage.setItem('tmc_archivio_bozze', JSON.stringify(archivio));
-            aggiornaListaBozze();
-        }
+        // ===============================================
 
         function apriEditorTesto() {
             const textInput = document.getElementById('descrizione_input');
@@ -694,8 +703,6 @@
                 
                 document.getElementById('loading-overlay').style.display = 'none';
 
-                if (gestisciErroreServer(data)) return;
-
                 if (data.results && data.results.length > 0) {
                     if (data.results.length === 1) {
                         applicaDatiCalendario(data.results[0]);
@@ -733,11 +740,9 @@
             
             let problemaSync = (data.problema || "").toUpperCase();
             
-            // --- NUOVO CONTROLLO: AVVISO TICKET GIA' INVIATO ---
             if (problemaSync.indexOf("RAPPORTO INVIATO") !== -1) {
                 alert("⚠️ ATTENZIONE!\n\nQuesto rapporto di intervento risulta GIÀ INVIATO via mail in precedenza.\n\nPuoi comunque continuare con la compilazione se devi inviare una correzione.");
             }
-            // ---------------------------------------------------
 
             if (problemaSync.indexOf(FRASE_SICUREZZA) === -1) {
                 problemaSync += (problemaSync ? "\n\n" : "") + FRASE_SICUREZZA;
@@ -829,14 +834,12 @@
                  document.getElementById('n_rapporto_input').value = tckVal;
             }
 
-            // --- NUOVO CONTROLLO: VERIFICA LOCALE PRE-INVIO ---
             let ticketGiaInviatiLocalmente = JSON.parse(localStorage.getItem('tmc_ticket_inviati') || '[]');
             if (ticketGiaInviatiLocalmente.includes(tckVal)) {
                 if (!confirm("⚠️ ATTENZIONE!\n\nHai già inviato il ticket " + tckVal + " da questo dispositivo.\nVuoi inviare un nuovo aggiornamento o duplicato?")) {
-                    return; // L'utente si è fermato
+                    return; 
                 }
             }
-            // --------------------------------------------------
 
             document.getElementById('loading-overlay').style.display = 'flex';
             document.getElementById('loading-text').innerText = "Invio in corso e pulizia archivi...";
@@ -862,7 +865,6 @@
                         if(data.success) {
                             alert("Email inviata! La bozza è stata rimossa dal cloud.");
                             
-                            // Registra questo ticket come "inviato" nella memoria del telefono
                             if (!ticketGiaInviatiLocalmente.includes(tckVal)) {
                                 ticketGiaInviatiLocalmente.push(tckVal);
                                 localStorage.setItem('tmc_ticket_inviati', JSON.stringify(ticketGiaInviatiLocalmente));

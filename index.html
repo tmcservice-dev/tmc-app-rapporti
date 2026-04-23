@@ -134,6 +134,21 @@
         </div>
     </div>
 
+    <div id="email-editor-overlay" class="overlay-bg" style="display:none; padding: 20px; box-sizing: border-box; z-index: 99999;">
+        <div style="background:white; width:100%; max-width: 450px; border-radius:8px; display:flex; flex-direction:column; overflow:hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+            <div style="padding:15px; background:var(--tmc-blue); color:white; text-align:center;">
+                <b style="font-size:16px;">INSERISCI EMAIL CLIENTE</b>
+            </div>
+            <div style="padding:25px;">
+                <input type="email" id="modal_email_input" placeholder="nome.cognome@azienda.it" style="width:100%; padding:15px; font-size:18px; text-transform:none; border:2px solid var(--tmc-blue); border-radius:5px; box-sizing:border-box; outline:none; text-align:center;">
+            </div>
+            <div style="display:flex; gap:1px; background:#ddd;">
+                <button onclick="chiudiEditorEmail(false)" style="flex:1; padding:15px; background:#eee; color:#333; border:none; font-weight:bold; cursor:pointer;">ANNULLA</button>
+                <button onclick="chiudiEditorEmail(true)" style="flex:1; padding:15px; background:#25D366; color:white; border:none; font-weight:bold; cursor:pointer;">CONFERMA</button>
+            </div>
+        </div>
+    </div>
+
     <div id="drafts-overlay" class="overlay-bg" style="display:none;">
         <div class="modal-box" style="max-height: 80%; overflow-y: auto; padding: 20px;">
             <h3 style="color:var(--tmc-blue); margin-top:0;">Archivio Bozze</h3>
@@ -302,8 +317,8 @@
                                 <input type="text" id="macchina_input" name="macchina" class="save-data caps">
                             </div>
                             <div class="input-field" style="flex:1;">
-                                <label>Email Cliente</label>
-                                <input type="email" id="email_input" name="email_cliente" class="save-data" placeholder="nome@email.it" style="text-transform:none;">
+                                <label>Email Cliente (Tocca per inserire)</label>
+                                <input type="email" id="email_input" name="email_cliente" class="save-data" placeholder="Tocca per inserire..." style="text-transform:none; cursor:pointer; background:#f0f7ff;" readonly onclick="apriEditorEmail()">
                             </div>
                         </div>
                     </div>
@@ -548,6 +563,27 @@
             document.getElementById('text-editor-overlay').style.display = 'none';
         }
 
+        function apriEditorEmail() {
+            document.getElementById('modal_email_input').value = document.getElementById('email_input').value;
+            document.getElementById('email-editor-overlay').style.display = 'flex';
+            setTimeout(() => document.getElementById('modal_email_input').focus(), 100);
+        }
+
+        function chiudiEditorEmail(salva) {
+            if (salva) {
+                const em = document.getElementById('modal_email_input').value.trim();
+                document.getElementById('email_input').value = em;
+                
+                // Estrae in automatico il nome per il responsabile e toglie eventuali punti
+                if (em.includes('@')) {
+                    const estrazione = em.split('@')[0].replace(/\./g, ' ').toUpperCase();
+                    document.getElementsByName('nome_responsabile')[0].value = estrazione;
+                }
+                saveDraft();
+            }
+            document.getElementById('email-editor-overlay').style.display = 'none';
+        }
+
         let rowCount = 0; let ricCount = 0;
         const canvas = document.getElementById('canvas-fullscreen');
         const ctx = canvas.getContext('2d');
@@ -672,13 +708,11 @@
             document.getElementById('n_rapporto_input').value = data.tck || "";
             document.getElementById('macchina_input').value = (data.matricola || "").toUpperCase();
             
-            // --- INSERIMENTO FRASE SICUREZZA ALLA SINCRONIZZAZIONE ---
             let problemaSync = (data.problema || "").toUpperCase();
             if (problemaSync.indexOf(FRASE_SICUREZZA) === -1) {
                 problemaSync += (problemaSync ? "\n\n" : "") + FRASE_SICUREZZA;
             }
             document.getElementById('descrizione_input').value = problemaSync;
-            // ---------------------------------------------------------
             
             document.getElementById('cliente_input').value = (data.cliente || "").toUpperCase();
             document.getElementById('indirizzo_input').value = (data.indirizzo || "").toUpperCase();
@@ -720,7 +754,7 @@
 
         function getPdfOptions(fileName) {
             return {
-                margin: [1, 0, 2, 0], // Recuperato tantissimo spazio al top
+                margin: [1, 0, 2, 0], 
                 filename: fileName, 
                 image: { type: 'jpeg', quality: 0.98 }, 
                 html2canvas: { scale: 2, useCORS: true, scrollY: 0 }, 
@@ -844,7 +878,10 @@
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data" name="d_${rowCount}" placeholder="Data" readonly style="font-size:9px; text-align:center; width:100%; pointer-events:none; border:none; background:transparent;"></td>
-                <td><input type="text" class="save-data caps" name="tec_${rowCount}" placeholder="Nome" style="font-size:8px; text-align:center; width:100%;"></td>
+                <td>
+                    <input type="text" class="save-data caps" name="tec_${rowCount}" placeholder="Nome" style="font-size:8px; text-align:center; width:100%;">
+                    <div id="ore_riga_${rowCount}" style="font-size:7px; color:var(--tmc-blue); font-weight:bold; margin-top:2px;"></div>
+                </td>
                 <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="va1_${rowCount}" readonly style="pointer-events:none;"></td>
                 <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="va2_${rowCount}" readonly style="pointer-events:none;"></td>
                 <td onclick="apriEditorOrari(${rowCount})" style="cursor:pointer;"><input type="text" class="save-data time-select" name="lm1_${rowCount}" readonly style="pointer-events:none;"></td>
@@ -912,6 +949,21 @@
 
         function chiudiEditorOrari(salva) {
             if(salva && currentEditRow) {
+                const va1 = document.getElementById('modal_va1').value;
+                const va2 = document.getElementById('modal_va2').value;
+                const lm1 = document.getElementById('modal_lm1').value;
+                const lm2 = document.getElementById('modal_lm2').value;
+                const lp1 = document.getElementById('modal_lp1').value;
+                const lp2 = document.getElementById('modal_lp2').value;
+                const vr1 = document.getElementById('modal_vr1').value;
+                const vr2 = document.getElementById('modal_vr2').value;
+
+                // Controlli per gli orari identici
+                if ((va1 && va1 === va2) || (lm1 && lm1 === lm2) || (lp1 && lp1 === lp2) || (vr1 && vr1 === vr2)) {
+                    alert("Attenzione!! Errore nella compilazione oraria: un orario di INIZIO è uguale all'orario di FINE.");
+                    return; // Blocca il salvataggio
+                }
+
                 const rowIdx = currentEditRow;
                 const timeFields = ['va1','va2','lm1','lm2','lp1','lp2','vr1','vr2'];
                 
@@ -995,8 +1047,24 @@
                 let vr1 = document.getElementsByName(`vr1_${i}`)[0]?.value;
                 let vr2 = document.getElementsByName(`vr2_${i}`)[0]?.value;
 
-                totViaggio += getDiff(va1, va2) + getDiff(vr1, vr2);
-                totLavoro += getDiff(lm1, lm2) + getDiff(lp1, lp2);
+                let minViaggioRiga = getDiff(va1, va2) + getDiff(vr1, vr2);
+                let minLavoroRiga = getDiff(lm1, lm2) + getDiff(lp1, lp2);
+
+                totViaggio += minViaggioRiga;
+                totLavoro += minLavoroRiga;
+
+                // Mostra totale sotto al tecnico
+                let totRigaMinuti = minViaggioRiga + minLavoroRiga;
+                let divOreTecnico = document.getElementById(`ore_riga_${i}`);
+                if(divOreTecnico) {
+                    if(totRigaMinuti > 0) {
+                        let h = Math.floor(totRigaMinuti / 60);
+                        let m = totRigaMinuti % 60;
+                        divOreTecnico.innerText = `${h}h ${m > 0 ? m + 'm' : ''}`;
+                    } else {
+                        divOreTecnico.innerText = "";
+                    }
+                }
 
                 if (document.getElementsByName(`p_${i}`)[0]?.checked) totP++;
                 if (document.getElementsByName(`c_${i}`)[0]?.checked) totC++;
@@ -1031,9 +1099,20 @@
             canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight;
             ctx.lineWidth = 3; ctx.strokeStyle = "#000"; ctx.lineCap = "round";
         }
+        
         function closeSignature(save) {
             if(save) {
-                const url = canvas.toDataURL();
+                // Rotazione automatica di -90 gradi (antiorario)
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = canvas.height;
+                tempCanvas.height = canvas.width;
+                const tCtx = tempCanvas.getContext('2d');
+                
+                tCtx.translate(0, tempCanvas.height);
+                tCtx.rotate(-Math.PI / 2);
+                tCtx.drawImage(canvas, 0, 0);
+
+                const url = tempCanvas.toDataURL();
                 document.getElementById('sig-image').src = url;
                 document.getElementById('sig-image').style.display = 'block';
                 document.getElementById('placeholder-firma').style.display = 'none';
@@ -1041,6 +1120,7 @@
             }
             document.getElementById('signature-overlay').style.display = 'none';
         }
+        
         function clearSignature() { ctx.clearRect(0,0,canvas.width, canvas.height); }
         function getPos(e) {
             const rect = canvas.getBoundingClientRect();
@@ -1067,11 +1147,9 @@
             for(let i=0; i<counts.ric; i++) addRicambio();
             const saved = JSON.parse(localStorage.getItem('tmc_bozza') || '{}');
             
-            // --- INSERIMENTO FRASE SICUREZZA DI DEFAULT ---
             if (!saved['descrizione'] || saved['descrizione'].trim() === "") {
                 saved['descrizione'] = FRASE_SICUREZZA;
             }
-            // ----------------------------------------------
             
             let tCount = 1;
             while(saved['tecnico_' + tCount] !== undefined) {
@@ -1107,10 +1185,8 @@
             } 
         }
 
-        // --- ASCOLTATORI PER LA STAMPA NATIVA DEL BROWSER ---
         window.addEventListener('beforeprint', preparaSchermoPerPDF);
         window.addEventListener('afterprint', ripristinaSchermo);
-        // ----------------------------------------------------
 
         window.onload = function() {
             const savedPin = localStorage.getItem('tmc_auth_token');

@@ -732,6 +732,13 @@
             document.getElementById('macchina_input').value = (data.matricola || "").toUpperCase();
             
             let problemaSync = (data.problema || "").toUpperCase();
+            
+            // --- NUOVO CONTROLLO: AVVISO TICKET GIA' INVIATO ---
+            if (problemaSync.indexOf("RAPPORTO INVIATO") !== -1) {
+                alert("⚠️ ATTENZIONE!\n\nQuesto rapporto di intervento risulta GIÀ INVIATO via mail in precedenza.\n\nPuoi comunque continuare con la compilazione se devi inviare una correzione.");
+            }
+            // ---------------------------------------------------
+
             if (problemaSync.indexOf(FRASE_SICUREZZA) === -1) {
                 problemaSync += (problemaSync ? "\n\n" : "") + FRASE_SICUREZZA;
             }
@@ -822,6 +829,15 @@
                  document.getElementById('n_rapporto_input').value = tckVal;
             }
 
+            // --- NUOVO CONTROLLO: VERIFICA LOCALE PRE-INVIO ---
+            let ticketGiaInviatiLocalmente = JSON.parse(localStorage.getItem('tmc_ticket_inviati') || '[]');
+            if (ticketGiaInviatiLocalmente.includes(tckVal)) {
+                if (!confirm("⚠️ ATTENZIONE!\n\nHai già inviato il ticket " + tckVal + " da questo dispositivo.\nVuoi inviare un nuovo aggiornamento o duplicato?")) {
+                    return; // L'utente si è fermato
+                }
+            }
+            // --------------------------------------------------
+
             document.getElementById('loading-overlay').style.display = 'flex';
             document.getElementById('loading-text').innerText = "Invio in corso e pulizia archivi...";
             
@@ -845,6 +861,13 @@
                         document.getElementById('loading-overlay').style.display = 'none';
                         if(data.success) {
                             alert("Email inviata! La bozza è stata rimossa dal cloud.");
+                            
+                            // Registra questo ticket come "inviato" nella memoria del telefono
+                            if (!ticketGiaInviatiLocalmente.includes(tckVal)) {
+                                ticketGiaInviatiLocalmente.push(tckVal);
+                                localStorage.setItem('tmc_ticket_inviati', JSON.stringify(ticketGiaInviatiLocalmente));
+                            }
+
                             nuovoRapporto();
                         }
                     });

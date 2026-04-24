@@ -88,12 +88,12 @@
 
         /* Stili Login e Modali */
         .overlay-bg { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(82, 86, 89, 0.95); z-index: 99999; flex-direction: column; justify-content: center; align-items: center; }
-        .modal-box { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: center; color: var(--tmc-dark); width: 80%; max-width: 350px; }
+        .modal-box { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); text-align: center; color: var(--tmc-dark); width: 85%; max-width: 450px; }
         .modal-box input { border: 2px solid var(--tmc-blue); padding: 12px; margin: 20px 0; width: calc(100% - 24px); font-size: 18px; text-align: center; border-radius: 5px; outline: none; }
         .modal-box button { background: var(--tmc-blue); color: white; border: none; padding: 15px; font-size: 16px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; }
         
         #drafts-overlay { z-index: 99998; }
-        .draft-item { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding:12px 0; text-align:left; }
+        .draft-item { display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #ddd; padding:10px 0; text-align:left; gap: 5px;}
 
         .modal-time-label { display:block; font-size:11px; font-weight:bold; color:var(--tmc-blue); margin-bottom:3px; }
         .modal-time-group { display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px; background:#f9f9f9; padding:10px; border-radius:5px; border:1px solid #eee; }
@@ -132,11 +132,21 @@
     </div>
 
     <div id="drafts-overlay" class="overlay-bg" style="display:none;">
-        <div class="modal-box" style="max-height: 80%; overflow-y: auto; padding: 20px;">
-            <h3 style="color:var(--tmc-blue); margin-top:0;">Archivio Bozze Condivise</h3>
-            <p style="font-size: 11px; color: #666; margin-top: 0;">Qui trovi i lavori in sospeso di tutti i dispositivi.</p>
-            <button onclick="salvaBozzaAttuale()" style="background:#ff9800; margin-bottom:15px; font-size:13px; padding:12px;">+ SALVA E CONDIVIDI RAPPORTO ATTUALE</button>
-            <div id="lista-bozze" style="margin-bottom: 15px; border: 1px solid #eee; padding: 10px; border-radius: 5px;"></div>
+        <div class="modal-box" style="max-height: 85%; overflow-y: auto; padding: 15px;">
+            <h3 style="color:var(--tmc-blue); margin-top:0;">Archivio Bozze</h3>
+            
+            <button onclick="salvaBozzaAttuale()" style="background:#ff9800; margin-bottom:15px; font-size:13px; padding:12px;">💾 SALVA RAPPORTO ATTUALE</button>
+            
+            <div style="background:#fff3e0; padding:10px; border-radius:5px; margin-bottom:15px; border:1px solid #ffcc80;">
+                <h4 style="margin:0 0 10px 0; color:#e65100; font-size:12px; text-align:left;">📱 BOZZE SUL DISPOSITIVO (Offline)</h4>
+                <div id="lista-bozze-locali"></div>
+            </div>
+
+            <div style="background:#e3f2fd; padding:10px; border-radius:5px; margin-bottom:15px; border:1px solid #90caf9;">
+                <h4 style="margin:0 0 10px 0; color:#1565c0; font-size:12px; text-align:left;">☁️ BOZZE CONDIVISE (Cloud)</h4>
+                <div id="lista-bozze-cloud"></div>
+            </div>
+
             <button onclick="document.getElementById('drafts-overlay').style.display = 'none';" style="background:#444;">CHIUDI ARCHIVIO</button>
         </div>
     </div>
@@ -373,7 +383,7 @@
         <div class="no-print">
             <button class="btn btn-dark" onclick="addRow()">+ GIORNO/TECNICO</button>
             <button class="btn btn-dark" onclick="addRicambio()">+ RICAMBIO</button>
-            <button class="btn btn-orange" style="background:#ff9800; min-width:100%;" onclick="apriBozze()">☁️ ARCHIVIO BOZZE (CLOUD)</button>
+            <button class="btn btn-orange" style="background:#ff9800; min-width:100%;" onclick="apriBozze()">📂 ARCHIVIO BOZZE</button>
             <button class="btn btn-blue" onclick="window.print()">SALVA PDF</button>
             <button class="btn btn-green" onclick="condividiWhatsApp()">WHATSAPP</button>
             <button class="btn btn-orange" style="background:#e91e63;" onclick="inviaEmailAutomaticamente()">INVIA EMAIL</button>
@@ -404,6 +414,7 @@
         const FRASE_SICUREZZA = "MACCHINA LASCIATA AL CLIENTE IN FUNZIONE E IN CONDIZIONE DI SICUREZZA";
         
         async function verificaLogin() {
+            if(!navigator.onLine) return alert("Sei offline. Attiva la connessione per il primo login.");
             const input = document.getElementById('pin_input').value.toUpperCase().trim();
             const btn = document.getElementById('btn-login');
             if(!input) return;
@@ -442,86 +453,15 @@
         }
 
         // ===============================================
-        // NUOVO MOTORE BOZZE (100% IN CLOUD CONDIVISO)
+        // MOTORE BOZZE IBRIDO (LOCALE + CLOUD)
         // ===============================================
-        async function apriBozze() {
-            document.getElementById('drafts-overlay').style.display = 'flex';
-            document.getElementById('lista-bozze').innerHTML = "<p style='text-align:center;'>Download dal Cloud in corso... ⏳</p>";
-            
-            try {
-                const pin = encodeURIComponent(localStorage.getItem('tmc_auth_token'));
-                const res = await fetch(`${APP_SCRIPT_URL}?action=get_bozze&pin=${pin}`);
-                const data = await res.json();
-                
-                if (data.success) {
-                    aggiornaListaBozzeCloud(data.bozze);
-                } else {
-                    document.getElementById('lista-bozze').innerHTML = "<p style='color:red;'>Errore. Verifica password o connessione.</p>";
-                }
-            } catch (e) {
-                document.getElementById('lista-bozze').innerHTML = "<p style='color:red;'>Errore di connessione al Cloud.</p>";
-            }
-        }
-
-        function aggiornaListaBozzeCloud(bozze) {
-            const container = document.getElementById('lista-bozze');
-            container.innerHTML = "";
-            
-            if(!bozze || bozze.length === 0) {
-                container.innerHTML = "<p style='font-size:13px; color:#666; margin:10px 0; text-align:center;'>Nessun lavoro in sospeso nel Cloud condiviso.</p>";
-                return;
-            }
-            
-            window.bozzeCloud = bozze; 
-
-            bozze.forEach((b, index) => {
-                const div = document.createElement('div');
-                div.className = "draft-item";
-                
-                let d = new Date(b.data);
-                let dataFormattata = d.toLocaleString('it-IT', {day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit'});
-                
-                div.innerHTML = `
-                    <div style="flex:1; padding-right:10px;">
-                        <strong style="font-size:13px; color:var(--tmc-blue);">${b.tck}</strong><br>
-                        <span style="font-size:10px; color:#555;">${b.tecnico} - ${dataFormattata}</span>
-                    </div>
-                    <div style="display:flex; gap:5px;">
-                        <button onclick="caricaBozzaCloud(${index})" style="background:#25D366; padding:8px; width:auto; font-size:11px;">APRI</button>
-                        <button onclick="eliminaBozzaCloudUI('${b.tck}')" style="background:#ff4444; padding:8px; width:auto; font-size:11px;">X</button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function caricaBozzaCloud(index) {
-            if(!confirm("⚠️ Vuoi caricare questa bozza?\n\nI dati attuali a schermo verranno sostituiti.")) return;
-            
-            const bozza = window.bozzeCloud[index];
-            if(!bozza) return;
-
-            try {
-                const jsonData = JSON.parse(bozza.dati); 
-                
-                localStorage.setItem('tmc_bozza', JSON.stringify(jsonData.inputs || {}));
-                localStorage.setItem('tmc_counts', JSON.stringify(jsonData.counts || {r:1, ric:1}));
-                if (jsonData.sig) localStorage.setItem('tmc_sig', jsonData.sig);
-                else localStorage.removeItem('tmc_sig');
-                
-                document.getElementById('drafts-overlay').style.display = 'none';
-                loadDraft(); 
-            } catch(e) {
-                alert("Errore nel caricamento dei dati della bozza.");
-            }
-        }
 
         async function salvaBozzaAttuale() {
             const ticket = document.getElementById('n_rapporto_input').value;
             const tecnico = document.getElementsByName('tecnico_1')[0].value || "Nessun Tecnico";
             
             if (!ticket || ticket === "TCK-") {
-                alert("⚠️ Devi inserire almeno il NUMERO DI RAPPORTO (TCK) per poterlo salvare nel Cloud e condividerlo!");
+                alert("⚠️ Devi inserire almeno il NUMERO DI RAPPORTO (TCK) per poterlo salvare.");
                 return;
             }
 
@@ -534,47 +474,198 @@
                 sig: localStorage.getItem('tmc_sig')
             };
 
-            document.getElementById('loading-overlay').style.display = 'flex';
-            document.getElementById('loading-text').innerText = "Salvataggio nel Cloud Condiviso...";
+            // 1. SALVATAGGIO LOCALE (SEMPRE)
+            let bozzeLocali = JSON.parse(localStorage.getItem('tmc_bozze_locali') || '[]');
+            bozzeLocali = bozzeLocali.filter(b => b.tck !== ticket); // Rimuove vecchie versioni stesso TCK
+            bozzeLocali.push({ tck: ticket, tecnico: tecnico, payload: payload, data: Date.now() });
+            localStorage.setItem('tmc_bozze_locali', JSON.stringify(bozzeLocali));
 
-            try {
-                const res = await fetch(APP_SCRIPT_URL, {
-                    method: "POST",
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        action: "save_cloud",
-                        tck: ticket,
-                        tecnico: tecnico,
-                        content: payload,
-                        pin: localStorage.getItem('tmc_auth_token')
-                    })
-                });
-                const out = await res.json();
-                if (out.success) {
-                    alert("✅ Rapporto salvato! Ora è visibile su tutti i dispositivi.");
-                    apriBozze(); 
+            // 2. TENTATIVO CLOUD SE ONLINE
+            if (navigator.onLine) {
+                document.getElementById('loading-overlay').style.display = 'flex';
+                document.getElementById('loading-text').innerText = "Sincronizzazione Cloud...";
+                try {
+                    const res = await fetch(APP_SCRIPT_URL, {
+                        method: "POST",
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify({
+                            action: "save_cloud", tck: ticket, tecnico: tecnico, content: payload, pin: localStorage.getItem('tmc_auth_token')
+                        })
+                    });
+                    const out = await res.json();
+                    if (out.success) {
+                        // Se il cloud risponde OK, togliamo la bozza da quelle "Locali Pending"
+                        bozzeLocali = bozzeLocali.filter(b => b.tck !== ticket);
+                        localStorage.setItem('tmc_bozze_locali', JSON.stringify(bozzeLocali));
+                        alert("✅ Rapporto salvato e sincronizzato nel Cloud Aziendale.");
+                    }
+                } catch(e) {
+                    alert("⚠️ Connessione debole. Il rapporto è SALVO SUL TELEFONO. Sincronizzalo in seguito dall'archivio.");
+                } finally {
+                    document.getElementById('loading-overlay').style.display = 'none';
                 }
-            } catch(e) {
-                alert("Errore di rete durante il salvataggio.");
-            } finally {
-                document.getElementById('loading-overlay').style.display = 'none';
+            } else {
+                alert("📵 Sei Offline! Il rapporto è SALVO SUL TELEFONO. Sincronizzalo appena torna la rete.");
+            }
+            
+            if(document.getElementById('drafts-overlay').style.display === 'flex') { apriBozze(); }
+        }
+
+
+        async function apriBozze() {
+            document.getElementById('drafts-overlay').style.display = 'flex';
+            aggiornaListaBozzeLocali();
+
+            const cloudContainer = document.getElementById('lista-bozze-cloud');
+            if (!navigator.onLine) {
+                cloudContainer.innerHTML = "<p style='font-size:12px; color:red; text-align:center;'>📵 Sei Offline. Impossibile scaricare dal Cloud.</p>";
+                return;
+            }
+
+            cloudContainer.innerHTML = "<p style='text-align:center; font-size:12px;'>Download dal Cloud in corso... ⏳</p>";
+            try {
+                const pin = encodeURIComponent(localStorage.getItem('tmc_auth_token'));
+                const res = await fetch(`${APP_SCRIPT_URL}?action=get_bozze&pin=${pin}`);
+                const data = await res.json();
+                if (data.success) { aggiornaListaBozzeCloud(data.bozze); } 
+                else { cloudContainer.innerHTML = "<p style='color:red; font-size:12px;'>Errore di sicurezza.</p>"; }
+            } catch (e) {
+                cloudContainer.innerHTML = "<p style='color:red; font-size:12px;'>Errore di rete con il server.</p>";
             }
         }
 
+        function aggiornaListaBozzeLocali() {
+            const container = document.getElementById('lista-bozze-locali');
+            const bozzeLocali = JSON.parse(localStorage.getItem('tmc_bozze_locali') || '[]');
+            container.innerHTML = "";
+            
+            if(bozzeLocali.length === 0) {
+                container.innerHTML = "<p style='font-size:11px; color:#666; margin:5px 0;'>Nessuna bozza locale in sospeso.</p>";
+                return;
+            }
+            
+            bozzeLocali.forEach((b) => {
+                const div = document.createElement('div');
+                div.className = "draft-item";
+                let dataFormattata = new Date(b.data).toLocaleString('it-IT', {day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit'});
+                div.innerHTML = `
+                    <div style="flex:1; padding-right:5px;">
+                        <strong style="font-size:12px; color:#e65100;">${b.tck}</strong><br>
+                        <span style="font-size:9px; color:#555;">${b.tecnico} - ${dataFormattata}</span>
+                    </div>
+                    <div style="display:flex; gap:4px;">
+                        <button onclick="caricaBozzaLocale('${b.tck}')" style="background:#25D366; padding:6px; font-size:10px;">APRI</button>
+                        <button onclick="sincronizzaManualmente('${b.tck}')" style="background:var(--tmc-blue); padding:6px; font-size:10px;">☁️ SYNC</button>
+                        <button onclick="eliminaBozzaLocale('${b.tck}')" style="background:#ff4444; padding:6px; font-size:10px;">X</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function aggiornaListaBozzeCloud(bozze) {
+            const container = document.getElementById('lista-bozze-cloud');
+            container.innerHTML = "";
+            if(!bozze || bozze.length === 0) {
+                container.innerHTML = "<p style='font-size:11px; color:#666; margin:5px 0;'>Nessun lavoro in sospeso nel Cloud.</p>";
+                return;
+            }
+            window.bozzeCloud = bozze; 
+            bozze.forEach((b, index) => {
+                const div = document.createElement('div');
+                div.className = "draft-item";
+                let dataFormattata = new Date(b.data).toLocaleString('it-IT', {day: '2-digit', month: '2-digit', hour: '2-digit', minute:'2-digit'});
+                div.innerHTML = `
+                    <div style="flex:1; padding-right:5px;">
+                        <strong style="font-size:12px; color:#1565c0;">${b.tck}</strong><br>
+                        <span style="font-size:9px; color:#555;">${b.tecnico} - ${dataFormattata}</span>
+                    </div>
+                    <div style="display:flex; gap:4px;">
+                        <button onclick="caricaBozzaCloud(${index})" style="background:#25D366; padding:6px; font-size:10px;">APRI</button>
+                        <button onclick="eliminaBozzaCloudUI('${b.tck}')" style="background:#ff4444; padding:6px; font-size:10px;">X</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function caricaBozzaLocale(tck) {
+            if(!confirm("Caricare questa bozza locale?")) return;
+            const bozzeLocali = JSON.parse(localStorage.getItem('tmc_bozze_locali') || '[]');
+            const bozza = bozzeLocali.find(b => b.tck === tck);
+            if(bozza) applicaDatiBozza(bozza.payload);
+        }
+
+        function caricaBozzaCloud(index) {
+            if(!confirm("Scaricare e caricare questa bozza dal Cloud?")) return;
+            const bozza = window.bozzeCloud[index];
+            if(bozza) applicaDatiBozza(JSON.parse(bozza.dati));
+        }
+
+        function applicaDatiBozza(jsonData) {
+            try {
+                localStorage.setItem('tmc_bozza', JSON.stringify(jsonData.inputs || {}));
+                localStorage.setItem('tmc_counts', JSON.stringify(jsonData.counts || {r:1, ric:1}));
+                if (jsonData.sig) localStorage.setItem('tmc_sig', jsonData.sig);
+                else localStorage.removeItem('tmc_sig');
+                
+                document.getElementById('drafts-overlay').style.display = 'none';
+                loadDraft(); 
+            } catch(e) { alert("Errore lettura bozza."); }
+        }
+
+        function eliminaBozzaLocale(tck) {
+            if(!confirm("Cancellare DEFINITIVAMENTE questa bozza dal telefono?")) return;
+            let bozzeLocali = JSON.parse(localStorage.getItem('tmc_bozze_locali') || '[]');
+            bozzeLocali = bozzeLocali.filter(b => b.tck !== tck);
+            localStorage.setItem('tmc_bozze_locali', JSON.stringify(bozzeLocali));
+            aggiornaListaBozzeLocali();
+        }
+
         async function eliminaBozzaCloudUI(tck) {
-            if(!confirm("⚠️ Sei sicuro di voler eliminare DEFINITIVAMENTE questa bozza da tutti i dispositivi?")) return;
+            if(!navigator.onLine) return alert("Sei offline! Non puoi cancellare file nel cloud ora.");
+            if(!confirm("⚠️ Eliminare DEFINITIVAMENTE questa bozza dal Cloud Condiviso?")) return;
             
-            document.getElementById('lista-bozze').innerHTML = "<p style='text-align:center;'>Eliminazione in corso... ⏳</p>";
-            
+            document.getElementById('lista-bozze-cloud').innerHTML = "<p>Eliminazione... ⏳</p>";
             try {
                 await fetch(APP_SCRIPT_URL, {
-                    method: "POST",
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    method: "POST", headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action: "delete_cloud", tck: tck, pin: localStorage.getItem('tmc_auth_token') })
                 });
                 apriBozze(); 
             } catch (e) { alert("Errore di rete"); }
         }
+
+        async function sincronizzaManualmente(tck) {
+            if(!navigator.onLine) return alert("Sei ancora Offline! Riprova quando c'è connessione.");
+            
+            const bozzeLocali = JSON.parse(localStorage.getItem('tmc_bozze_locali') || '[]');
+            const bozza = bozzeLocali.find(b => b.tck === tck);
+            if(!bozza) return;
+
+            document.getElementById('loading-overlay').style.display = 'flex';
+            document.getElementById('loading-text').innerText = "Invio al Cloud...";
+
+            try {
+                const res = await fetch(APP_SCRIPT_URL, {
+                    method: "POST", headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: "save_cloud", tck: bozza.tck, tecnico: bozza.tecnico, content: bozza.payload, pin: localStorage.getItem('tmc_auth_token') })
+                });
+                const out = await res.json();
+                if (out.success) {
+                    // Rimuove la bozza dalla sezione locale perché ora è nel cloud
+                    let aggiornate = bozzeLocali.filter(b => b.tck !== tck);
+                    localStorage.setItem('tmc_bozze_locali', JSON.stringify(aggiornate));
+                    apriBozze();
+                    alert("✅ Sincronizzazione riuscita!");
+                }
+            } catch(e) {
+                alert("Errore durante la sincronizzazione.");
+            } finally {
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
+        }
+
 
         // ===============================================
 
@@ -682,6 +773,8 @@
         }
 
         async function importaDaCalendario(mode = 'tecnico') {
+            if(!navigator.onLine) return alert("Devi essere online per interrogare il calendario aziendale!");
+
             let url = `${APP_SCRIPT_URL}?pin=${encodeURIComponent(localStorage.getItem('tmc_auth_token'))}`;
             
             if (mode === 'tecnico') {
@@ -825,6 +918,7 @@
         }
 
         function inviaEmailAutomaticamente() {
+            if (!navigator.onLine) return alert("📵 Sei Offline! Connettiti ad internet per poter inviare la mail.");
             if (!controllaFirma()) return; 
 
             const element = document.getElementById('rapporto-foglio');
@@ -869,6 +963,11 @@
                                 ticketGiaInviatiLocalmente.push(tckVal);
                                 localStorage.setItem('tmc_ticket_inviati', JSON.stringify(ticketGiaInviatiLocalmente));
                             }
+                            
+                            // Pulisce la bozza locale se esiste
+                            let bozzeLocali = JSON.parse(localStorage.getItem('tmc_bozze_locali') || '[]');
+                            bozzeLocali = bozzeLocali.filter(b => b.tck !== tckVal);
+                            localStorage.setItem('tmc_bozze_locali', JSON.stringify(bozzeLocali));
 
                             nuovoRapporto();
                         }

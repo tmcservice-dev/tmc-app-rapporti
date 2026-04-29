@@ -384,9 +384,9 @@
             <button class="btn btn-dark" onclick="addRow()">+ GIORNO/TECNICO</button>
             <button class="btn btn-dark" onclick="addRicambio()">+ RICAMBIO</button>
             <button class="btn btn-orange" style="background:#ff9800; min-width:100%;" onclick="apriBozze()">📂 ARCHIVIO BOZZE</button>
-            <button class="btn btn-blue" onclick="window.print()">SALVA PDF</button>
-            <button class="btn btn-green" onclick="condividiWhatsApp()">WHATSAPP</button>
-            <button class="btn btn-orange" style="background:#e91e63;" onclick="inviaEmailAutomaticamente()">INVIA EMAIL</button>
+            <button class="btn btn-blue" onclick="window.print()">SALVA PDF (Solo Cellulare)</button>
+            <button class="btn btn-green" onclick="condividiWhatsApp()">WHATSAPP + CALENDARIO</button>
+            <button class="btn btn-orange" style="background:#e91e63;" onclick="inviaEmailAutomaticamente()">INVIA EMAIL + CALENDARIO</button>
             <button class="btn" style="background:red;" onclick="nuovoRapporto()">RESET NUOVO</button>
             <button class="btn btn-dark" style="min-width: 100%; margin-top: 10px;" onclick="esciApp()">🔒 ESCI E RIMUOVI AUTORIZZAZIONE</button>
         </div>
@@ -474,13 +474,11 @@
                 sig: localStorage.getItem('tmc_sig')
             };
 
-            // 1. SALVATAGGIO LOCALE (SEMPRE)
             let bozzeLocali = JSON.parse(localStorage.getItem('tmc_bozze_locali') || '[]');
-            bozzeLocali = bozzeLocali.filter(b => b.tck !== ticket); // Rimuove vecchie versioni stesso TCK
+            bozzeLocali = bozzeLocali.filter(b => b.tck !== ticket); 
             bozzeLocali.push({ tck: ticket, tecnico: tecnico, payload: payload, data: Date.now() });
             localStorage.setItem('tmc_bozze_locali', JSON.stringify(bozzeLocali));
 
-            // 2. TENTATIVO CLOUD SE ONLINE
             if (navigator.onLine) {
                 document.getElementById('loading-overlay').style.display = 'flex';
                 document.getElementById('loading-text').innerText = "Sincronizzazione Cloud...";
@@ -494,7 +492,6 @@
                     });
                     const out = await res.json();
                     if (out.success) {
-                        // Se il cloud risponde OK, togliamo la bozza da quelle "Locali Pending"
                         bozzeLocali = bozzeLocali.filter(b => b.tck !== ticket);
                         localStorage.setItem('tmc_bozze_locali', JSON.stringify(bozzeLocali));
                         alert("✅ Rapporto salvato e sincronizzato nel Cloud Aziendale.");
@@ -653,7 +650,6 @@
                 });
                 const out = await res.json();
                 if (out.success) {
-                    // Rimuove la bozza dalla sezione locale perché ora è nel cloud
                     let aggiornate = bozzeLocali.filter(b => b.tck !== tck);
                     localStorage.setItem('tmc_bozze_locali', JSON.stringify(aggiornate));
                     apriBozze();
@@ -891,7 +887,14 @@
             };
         }
 
+        // ===============================================
+        // AGGIORNATO: CONDIVISIONE WHATSAPP CON AGGIORNAMENTO CALENDARIO
+        // ===============================================
         function condividiWhatsApp() {
+            if (!navigator.onLine) {
+                alert("📵 Sei Offline! Connettiti ad internet per poter aggiornare il calendario aziendale. Altrimenti salva usando il pulsante SALVA PDF.");
+                return;
+            }
             if (!controllaFirma()) return;
 
             generaIdUnivoco();
@@ -900,23 +903,72 @@
             const nomeCliente = document.getElementById('cliente_input').value || 'Cliente';
             const fileName = `Rapporto_${idUnivoco}_${nomeCliente}.pdf`.replace(/ /g, "_");
 
-            alert("Generazione del PDF in corso... Attendi l'apertura del menu di condivisione.");
-            preparaSchermoPerPDF();
+            let tckVal = document.getElementById('n_rapporto_input').value;
+            if(!tckVal.startsWith("TCK-")) tckVal = "TCK-" + tckVal;
 
-            setTimeout(() => {
-                html2pdf().set(getPdfOptions(fileName)).from(element).output('blob').then(function(pdfBlob) {
-                    ripristinaSchermo();
-                    const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                        navigator.share({ title: 'Rapporto di Intervento', text: 'In allegato il rapporto di intervento.', files: [file] });
-                    } else {
-                        html2pdf().set(getPdfOptions(fileName)).from(element).save();
-                        alert("Il dispositivo non supporta l'invio diretto. Il PDF è stato scaricato.");
-                    }
-                }).catch(err => ripristinaSchermo());
-            }, 100);
+            let ticketGiaInviatiLocalmente = JSON.parse(localStorage.getItem('tmc_ticket_inviati') || '[]');
+            if (ticketGiaInviatiLocalmente.includes(tckVal)) {
+                if (!confirm("⚠️ ATTENZIONE!\n\nHai già chiuso il ticket " + tckVal + " da questo dispositivo.\nVuoi ricaricare i dati aggiornati sul calendario e inviare un PDF duplicato?")) {
+                    return; 
+                }
+            }
+
+            // Aggiungo la nota da mandare a Google Calendar
+            let testoCalendario = document.getElementById('descrizione_input').value;
+            if (testoCalendario.indexOf("RAPPORTO INVIATO") === -1) {
+                testoCalendario += "\n\n--- RAPPORTO INVIATO ---";
+            }
+
+            document.getElementById('loading-overlay').style.display = 'flex';
+            document.getElementById('loading-text').innerText = "Aggiornamento Calendario...";
+
+            // Passo 1: Mando il segnale al server per aggiornare il calendario e cancellare la bozza
+            fetch(APP_SCRIPT_URL, {
+                method: "POST",
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({
+                    action: "close_ticket",
+                    ticket: tckVal,
+                    updateCalendario: testoCalendario,
+                    pin: localStorage.getItem('tmc_auth_token')
+                })
+            }).then(() => {
+                
+                // Segna come inviato e pulisci la bozza
+                if (!ticketGiaInviatiLocalmente.includes(tckVal)) {
+                    ticketGiaInviatiLocalmente.push(tckVal);
+                    localStorage.setItem('tmc_ticket_inviati', JSON.stringify(ticketGiaInviatiLocalmente));
+                }
+                let bozzeLocali = JSON.parse(localStorage.getItem('tmc_bozze_locali') || '[]');
+                bozzeLocali = bozzeLocali.filter(b => b.tck !== tckVal);
+                localStorage.setItem('tmc_bozze_locali', JSON.stringify(bozzeLocali));
+
+                // Passo 2: Genero il PDF e apro WhatsApp
+                document.getElementById('loading-text').innerText = "Generazione PDF in corso...";
+                preparaSchermoPerPDF();
+
+                setTimeout(() => {
+                    html2pdf().set(getPdfOptions(fileName)).from(element).output('blob').then(function(pdfBlob) {
+                        ripristinaSchermo();
+                        document.getElementById('loading-overlay').style.display = 'none';
+                        const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+                        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                            navigator.share({ title: 'Rapporto di Intervento', text: 'In allegato il rapporto di intervento.', files: [file] });
+                        } else {
+                            html2pdf().set(getPdfOptions(fileName)).from(element).save();
+                            alert("Il dispositivo non supporta l'invio diretto WhatsApp. Il PDF è stato scaricato.");
+                        }
+                    }).catch(err => {
+                        ripristinaSchermo();
+                        document.getElementById('loading-overlay').style.display = 'none';
+                    });
+                }, 100);
+            });
         }
 
+        // ===============================================
+        // AGGIORNATO: INVIO EMAIL
+        // ===============================================
         function inviaEmailAutomaticamente() {
             if (!navigator.onLine) return alert("📵 Sei Offline! Connettiti ad internet per poter inviare la mail.");
             if (!controllaFirma()) return; 
@@ -930,13 +982,19 @@
 
             let ticketGiaInviatiLocalmente = JSON.parse(localStorage.getItem('tmc_ticket_inviati') || '[]');
             if (ticketGiaInviatiLocalmente.includes(tckVal)) {
-                if (!confirm("⚠️ ATTENZIONE!\n\nHai già inviato il ticket " + tckVal + " da questo dispositivo.\nVuoi inviare un nuovo aggiornamento o duplicato?")) {
+                if (!confirm("⚠️ ATTENZIONE!\n\nHai già chiuso il ticket " + tckVal + " da questo dispositivo.\nVuoi inviare un nuovo aggiornamento o duplicato?")) {
                     return; 
                 }
             }
 
+            // Aggiungo la nota da mandare a Google Calendar
+            let testoCalendario = document.getElementById('descrizione_input').value;
+            if (testoCalendario.indexOf("RAPPORTO INVIATO") === -1) {
+                testoCalendario += "\n\n--- RAPPORTO INVIATO ---";
+            }
+
             document.getElementById('loading-overlay').style.display = 'flex';
-            document.getElementById('loading-text').innerText = "Invio in corso e pulizia archivi...";
+            document.getElementById('loading-text').innerText = "Invio in corso e aggiornamento calendario...";
             
             preparaSchermoPerPDF();
 
@@ -950,6 +1008,7 @@
                         body: JSON.stringify({
                             pdfBase64: pdfBase64,
                             ticket: tckVal,
+                            updateCalendario: testoCalendario, // <-- QUESTO MANCAVA!
                             pin: localStorage.getItem('tmc_auth_token')
                         })
                     })
@@ -957,14 +1016,13 @@
                     .then(data => {
                         document.getElementById('loading-overlay').style.display = 'none';
                         if(data.success) {
-                            alert("Email inviata! La bozza è stata rimossa dal cloud.");
+                            alert("Email inviata e calendario aggiornato!");
                             
                             if (!ticketGiaInviatiLocalmente.includes(tckVal)) {
                                 ticketGiaInviatiLocalmente.push(tckVal);
                                 localStorage.setItem('tmc_ticket_inviati', JSON.stringify(ticketGiaInviatiLocalmente));
                             }
                             
-                            // Pulisce la bozza locale se esiste
                             let bozzeLocali = JSON.parse(localStorage.getItem('tmc_bozze_locali') || '[]');
                             bozzeLocali = bozzeLocali.filter(b => b.tck !== tckVal);
                             localStorage.setItem('tmc_bozze_locali', JSON.stringify(bozzeLocali));

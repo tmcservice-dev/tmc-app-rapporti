@@ -888,7 +888,58 @@
         }
 
         // ===============================================
-        // AGGIORNATO: CONDIVISIONE WHATSAPP CON AGGIORNAMENTO CALENDARIO
+        // NUOVA FUNZIONE: GENERA RIEPILOGO CALENDARIO
+        // ===============================================
+        function generaRiepilogoCalendario(idUnivoco) {
+            let riepilogo = `\n\n--- RAPPORTO INVIATO (${idUnivoco}) ---\n`;
+            
+            // 1. Estrae le ore dai contatori già calcolati a schermo
+            let spanLav = ""; let spanVia = "";
+            let lavElement = document.getElementById('tot_lavoro_span');
+            let viaElement = document.getElementById('tot_viaggio_span');
+            
+            if (lavElement && lavElement.innerText) {
+                spanLav = lavElement.innerText.replace('[TOTALE: ', '').replace(']', '').trim();
+            }
+            if (viaElement && viaElement.innerText) {
+                spanVia = viaElement.innerText.replace('[TOTALE: ', '').replace(']', '').trim();
+            }
+            
+            if (spanLav) riepilogo += `Lavoro: ${spanLav}\n`;
+            if (spanVia) riepilogo += `Viaggio: ${spanVia}\n`;
+            
+            // 2. Calcola Pasti e Pernotti
+            let totP = 0, totC = 0, totH = 0;
+            for(let i=1; i<=rowCount; i++) {
+                if (document.getElementsByName(`p_${i}`)[0]?.checked) totP++;
+                if (document.getElementsByName(`c_${i}`)[0]?.checked) totC++;
+                if (document.getElementsByName(`h_${i}`)[0]?.checked) totH++;
+            }
+            
+            let pasti = totP + totC; // Somma pranzi e cene
+            let trasfertaArr = [];
+            if (pasti > 0) trasfertaArr.push(`${pasti} Pasti`);
+            if (totH > 0) trasfertaArr.push(`${totH} Pernotti`);
+            if (trasfertaArr.length > 0) riepilogo += `Trasferta: ${trasfertaArr.join(', ')}\n`;
+            
+            // 3. Estrae la lista dettagliata dei ricambi
+            let ricambiList = [];
+            for(let i=1; i<=ricCount; i++) {
+                let desc = document.getElementsByName(`rd_${i}`)[0]?.value;
+                let qta = document.getElementsByName(`rq_${i}`)[0]?.value;
+                if (desc && qta && parseFloat(qta) > 0) {
+                    ricambiList.push(`- ${qta}x ${desc.toUpperCase()}`);
+                }
+            }
+            if (ricambiList.length > 0) {
+                riepilogo += `Ricambi:\n${ricambiList.join('\n')}\n`;
+            }
+            
+            return riepilogo;
+        }
+
+        // ===============================================
+        // AGGIORNATO: CONDIVISIONE WHATSAPP
         // ===============================================
         function condividiWhatsApp() {
             if (!navigator.onLine) {
@@ -913,16 +964,15 @@
                 }
             }
 
-            // Aggiungo la nota da mandare a Google Calendar
+            // CREA LA NOTA DI RIEPILOGO DA MANDARE AL CALENDARIO
             let testoCalendario = document.getElementById('descrizione_input').value;
             if (testoCalendario.indexOf("RAPPORTO INVIATO") === -1) {
-                testoCalendario += "\n\n--- RAPPORTO INVIATO ---";
+                testoCalendario += generaRiepilogoCalendario(idUnivoco);
             }
 
             document.getElementById('loading-overlay').style.display = 'flex';
             document.getElementById('loading-text').innerText = "Aggiornamento Calendario...";
 
-            // Passo 1: Mando il segnale al server per aggiornare il calendario e cancellare la bozza
             fetch(APP_SCRIPT_URL, {
                 method: "POST",
                 headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -933,8 +983,6 @@
                     pin: localStorage.getItem('tmc_auth_token')
                 })
             }).then(() => {
-                
-                // Segna come inviato e pulisci la bozza
                 if (!ticketGiaInviatiLocalmente.includes(tckVal)) {
                     ticketGiaInviatiLocalmente.push(tckVal);
                     localStorage.setItem('tmc_ticket_inviati', JSON.stringify(ticketGiaInviatiLocalmente));
@@ -943,7 +991,6 @@
                 bozzeLocali = bozzeLocali.filter(b => b.tck !== tckVal);
                 localStorage.setItem('tmc_bozze_locali', JSON.stringify(bozzeLocali));
 
-                // Passo 2: Genero il PDF e apro WhatsApp
                 document.getElementById('loading-text').innerText = "Generazione PDF in corso...";
                 preparaSchermoPerPDF();
 
@@ -973,7 +1020,10 @@
             if (!navigator.onLine) return alert("📵 Sei Offline! Connettiti ad internet per poter inviare la mail.");
             if (!controllaFirma()) return; 
 
+            generaIdUnivoco();
             const element = document.getElementById('rapporto-foglio');
+            const idUnivoco = document.getElementById('id_univoco_input').value;
+            
             let tckVal = document.getElementById('n_rapporto_input').value;
             if(!tckVal.startsWith("TCK-")) {
                  tckVal = "TCK-" + tckVal;
@@ -987,10 +1037,10 @@
                 }
             }
 
-            // Aggiungo la nota da mandare a Google Calendar
+            // CREA LA NOTA DI RIEPILOGO DA MANDARE AL CALENDARIO
             let testoCalendario = document.getElementById('descrizione_input').value;
             if (testoCalendario.indexOf("RAPPORTO INVIATO") === -1) {
-                testoCalendario += "\n\n--- RAPPORTO INVIATO ---";
+                testoCalendario += generaRiepilogoCalendario(idUnivoco);
             }
 
             document.getElementById('loading-overlay').style.display = 'flex';
@@ -1008,15 +1058,18 @@
                         body: JSON.stringify({
                             pdfBase64: pdfBase64,
                             ticket: tckVal,
-                            updateCalendario: testoCalendario, // <-- QUESTO MANCAVA!
-                            pin: localStorage.getItem('tmc_auth_token')
+                            updateCalendario: testoCalendario,
+                            pin: localStorage.getItem('tmc_auth_token'),
+                            filename: `Rapporto_${idUnivoco}.pdf`,
+                            nomeCliente: document.getElementById('cliente_input').value || 'Cliente',
+                            emailCliente: document.getElementById('email_input').value || ''
                         })
                     })
                     .then(res => res.json())
                     .then(data => {
                         document.getElementById('loading-overlay').style.display = 'none';
                         if(data.success) {
-                            alert("Email inviata e calendario aggiornato!");
+                            alert("Email inviata e calendario aggiornato con i totali!");
                             
                             if (!ticketGiaInviatiLocalmente.includes(tckVal)) {
                                 ticketGiaInviatiLocalmente.push(tckVal);
@@ -1028,6 +1081,8 @@
                             localStorage.setItem('tmc_bozze_locali', JSON.stringify(bozzeLocali));
 
                             nuovoRapporto();
+                        } else {
+                            alert("Errore nell'invio: " + data.error);
                         }
                     });
                 });

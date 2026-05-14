@@ -176,7 +176,7 @@
     <div id="loading-overlay"><div class="spinner"></div><div id="loading-text">Attendere...</div></div>
     <script>
         const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxh6R-LKwzIsbzNgTyf41AZTs3fxd_CqTE2bLQLQFcx7mwpb-ueqOARluwFPQFW47jM/exec";
-        const FRASE_SICUREZZA = "MACCHINA LASCIATA AL CLIENTE IN FUNZIONE E IN CONDIZIONE DI SICUREZZA";
+        const FRASE_SICUREZZA = "";
         async function verificaLogin() { if(!navigator.onLine) return alert("Sei offline. Attiva la connessione per il primo login."); const input = document.getElementById('pin_input').value.toUpperCase().trim(); const btn = document.getElementById('btn-login'); if(!input) return; btn.innerText = "VERIFICA IN CORSO..."; document.getElementById('login-error').style.display = 'none'; try { const response = await fetch(`${APP_SCRIPT_URL}?action=check_pin&pin=${encodeURIComponent(input)}`); const data = await response.json(); if(data.success) { localStorage.setItem('tmc_auth_token', input); sbloccaApp(); } else { document.getElementById('login-error').style.display = 'block'; } } catch(e) { alert("Errore di connessione. Riprova."); } finally { btn.innerText = "ACCEDI"; } }
         function esciApp(chiediConferma = true) { if(!chiediConferma || confirm("Vuoi rimuovere l'autorizzazione? Dovrai reinserire la password al prossimo avvio.")) { localStorage.removeItem('tmc_auth_token'); location.reload(); } }
         function sbloccaApp() { document.getElementById('login-overlay').style.display = 'none'; document.getElementById('app-content').style.display = 'block'; loadDraft(); }

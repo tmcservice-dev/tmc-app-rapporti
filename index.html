@@ -387,29 +387,24 @@
             const spanPCH = document.getElementById('tot_pch_span');
             const spanHotel = document.getElementById('tot_hotel_span');
 
-            // Se c'è almeno un + RIT., lascia tutto vuoto nelle note
-            if (hasRit) {
-                if(spanLav) spanLav.innerText = "";
-                if(spanVia) spanVia.innerText = "";
-                if(spanPCH) spanPCH.innerText = "";
-                if(spanHotel) spanHotel.innerText = "";
-            } else {
-                const formatOre = (mins) => {
-                    if(mins === 0) return "";
-                    let h = Math.floor(mins / 60); let m = mins % 60;
-                    return `${h}h ${m > 0 ? m + 'm' : ''}`.trim();
-                };
-                // ORE TOTALI = lavoro + viaggio
-                let totTutte = totLavoro + totViaggio;
-                if(spanLav) spanLav.innerText = totTutte > 0 ? formatOre(totTutte) : "";
-                // KM: campo libero (lasciamo vuoto — la riga ha dotted-line per compilazione manuale)
-                if(spanVia) spanVia.innerText = "";
-                // PASTI
-                let totPasti = totP + totC;
-                if(spanPCH) spanPCH.innerText = totPasti > 0 ? `${totPasti}` : "";
-                // HOTEL
-                if(spanHotel) spanHotel.innerText = totH > 0 ? `${totH}` : "";
-            }
+            const formatOre = (mins) => {
+                if(mins === 0) return "";
+                let h = Math.floor(mins / 60); let m = mins % 60;
+                return `${h}h ${m > 0 ? m + 'm' : ''}`.trim();
+            };
+            // ORE TOTALI = lavoro + viaggio (calcolate sempre, anche con +RIT.)
+            let totTutte = totLavoro + totViaggio;
+            let oreLabel = totTutte > 0 ? formatOre(totTutte) : "";
+            // Se c'è almeno un + RIT., aggiungi la dicitura
+            if (hasRit && oreLabel !== "") oreLabel += " + ritorno";
+            if(spanLav) spanLav.innerText = oreLabel;
+            // KM: campo libero (lasciamo vuoto — la riga ha dotted-line per compilazione manuale)
+            if(spanVia) spanVia.innerText = "";
+            // PASTI
+            let totPasti = totP + totC;
+            if(spanPCH) spanPCH.innerText = totPasti > 0 ? `${totPasti}` : "";
+            // HOTEL
+            if(spanHotel) spanHotel.innerText = totH > 0 ? `${totH}` : "";
             saveDraft();
         }
 

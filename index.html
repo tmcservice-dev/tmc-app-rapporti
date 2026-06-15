@@ -237,12 +237,12 @@
             if(elementId === 'descrizione_input') { saveDraft(); } 
         }
 
-        function checkOmonimia(el) {
-            const val = el.value.toUpperCase();
-            if (val.includes("MARCO")) {
-                alert("⚠️ ATTENZIONE: Abbiamo più tecnici con questo nome in azienda!\nAssicurati di inserire il COGNOME o di aver selezionato il tecnico corretto.");
-            }
-        }
+//        function checkOmonimia(el) {
+//            const val = el.value.toUpperCase();
+//            if (val.includes("MARCO")) {
+//                alert("⚠️ ATTENZIONE: Abbiamo più tecnici con questo nome in azienda!\nAssicurati di inserire il COGNOME o di aver selezionato il tecnico corretto.");
+//            }
+//        }
 
         function apriEditorTesto() { const textInput = document.getElementById('descrizione_input'); const textEditor = document.getElementById('editor_fullscreen'); textEditor.value = textInput.value; document.getElementById('text-editor-overlay').style.display = 'flex'; setTimeout(() => textEditor.focus(), 100); }
         function chiudiEditorTesto(salva) { if(salva) { const textInput = document.getElementById('descrizione_input'); const textEditor = document.getElementById('editor_fullscreen'); textInput.value = textEditor.value; saveDraft(); } document.getElementById('text-editor-overlay').style.display = 'none'; }
